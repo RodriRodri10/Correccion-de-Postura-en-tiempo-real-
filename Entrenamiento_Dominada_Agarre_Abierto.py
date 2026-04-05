@@ -16,8 +16,9 @@ warnings.filterwarnings("ignore")
 # --------------------------------------------------
 # CONFIG
 # --------------------------------------------------
-CARPETA_VIDEOS = r"\ejemplo"
-BASE_DIR = r"C:\modelo_fases_reglas"
+_DIR           = os.path.dirname(os.path.abspath(__file__))
+CARPETA_VIDEOS = os.path.join(_DIR, "videos", "dominadas_abierto")
+BASE_DIR       = os.path.join(_DIR, "Modelos", "dominadas agarre abierto")
 
 os.makedirs(BASE_DIR, exist_ok=True)
 

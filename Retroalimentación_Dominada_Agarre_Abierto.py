@@ -8,10 +8,10 @@ from collections import deque
 # --------------------------------------------------
 # CONFIG
 # --------------------------------------------------
-BASE_DIR = r"C:\modelo_fases_reglas"
-
-RUTA_MODELO = os.path.join(BASE_DIR, "modelo_fases.pkl")
-RUTA_SCALER = os.path.join(BASE_DIR, "scaler_fases.pkl")
+_DIR         = os.path.dirname(os.path.abspath(__file__))
+_MODELOS_DIR = os.path.join(_DIR, "Modelos", "dominadas agarre abierto")
+RUTA_MODELO  = os.path.join(_MODELOS_DIR, "modelo_fases.pkl")
+RUTA_SCALER  = os.path.join(_MODELOS_DIR, "scaler_fases.pkl")
 
 modelo = joblib.load(RUTA_MODELO)
 scaler = joblib.load(RUTA_SCALER)

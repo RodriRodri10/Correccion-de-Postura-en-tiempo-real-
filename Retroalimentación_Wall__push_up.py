@@ -7,11 +7,12 @@ from pykalman import KalmanFilter
 import joblib
 
 # ---------- CONFIG ----------
-RESULTADOS_DIR = r"C:\rangos_por_rep_push"
-RUTA_MODELO   = os.path.join(RESULTADOS_DIR, "modelo_fase.pkl")
-RUTA_SCALER   = os.path.join(RESULTADOS_DIR, "scaler_fase.pkl")
-RUTA_RANGOS   = os.path.join(RESULTADOS_DIR, "rangos_por_fase.npy")
-RUTA_VIDEO    = os.path.join(RESULTADOS_DIR, "video_realtime_reps.mp4")
+_DIR         = os.path.dirname(os.path.abspath(__file__))
+_MODELOS_DIR = os.path.join(_DIR, "Modelos", "walls_push_up")
+RUTA_MODELO  = os.path.join(_MODELOS_DIR, "modelo_fase.pkl")
+RUTA_SCALER  = os.path.join(_MODELOS_DIR, "scaler_fase.pkl")
+RUTA_RANGOS  = os.path.join(_MODELOS_DIR, "rangos_por_fase.npy")
+RUTA_VIDEO   = os.path.join(_DIR, "video_realtime_reps.mp4")
 
 mp_pose = mp.solutions.pose
 

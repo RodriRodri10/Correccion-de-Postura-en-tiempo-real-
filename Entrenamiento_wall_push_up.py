@@ -13,8 +13,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ---------- CONFIG ----------
-CARPETA_CORRECTOS = r"C:\push-up correcto"
-CARPETA_SALIDA = r"C:\rangos_por_rep"
+_DIR              = os.path.dirname(os.path.abspath(__file__))
+CARPETA_CORRECTOS = os.path.join(_DIR, "videos", "wall_push_up")
+CARPETA_SALIDA    = os.path.join(_DIR, "Modelos", "walls_push_up")
 
 os.makedirs(CARPETA_SALIDA, exist_ok=True)
 

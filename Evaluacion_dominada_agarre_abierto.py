@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -11,12 +12,14 @@ warnings.filterwarnings("ignore")
 # --------------------------------------------------
 # RUTAS
 # --------------------------------------------------
-VIDEO = r"C:\dominada_video.mp4"
+_DIR         = os.path.dirname(os.path.abspath(__file__))
+_MODELOS_DIR = os.path.join(_DIR, "Modelos", "dominadas agarre abierto")
+VIDEO        = os.path.join(_DIR, "videos", "dominadas_abierto", "prueba.mp4")
 
-MODELO = r"C:\modelo_fases.pkl"
-SCALER = r"C:\scaler_fases.pkl"
+MODELO     = os.path.join(_MODELOS_DIR, "modelo_fases.pkl")
+SCALER     = os.path.join(_MODELOS_DIR, "scaler_fases.pkl")
 
-CSV_SALIDA = r"C:\evaluacion_gt_vs_ml.csv"
+CSV_SALIDA = os.path.join(_MODELOS_DIR, "evaluacion_gt_vs_ml.csv")
 
 clf = joblib.load(MODELO)
 scaler = joblib.load(SCALER)

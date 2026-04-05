@@ -10,11 +10,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ---------------- CONFIG ----------------
-VIDEO = r"C:\push_up_prueba.mp4"
-RESULTADOS_DIR = r"C:\rangos_por_rep_push"
-RUTA_MODELO = os.path.join(RESULTADOS_DIR, "modelo_fase.pkl")
-RUTA_SCALER = os.path.join(RESULTADOS_DIR, "scaler_fase.pkl")
-CSV_SALIDA = os.path.join(RESULTADOS_DIR, "evaluacion_curva_vs_ml_pushup.csv")
+_DIR           = os.path.dirname(os.path.abspath(__file__))
+_MODELOS_DIR   = os.path.join(_DIR, "Modelos", "walls_push_up")
+VIDEO          = os.path.join(_DIR, "videos", "wall_push_up", "prueba.mp4")
+RESULTADOS_DIR = _MODELOS_DIR
+RUTA_MODELO    = os.path.join(_MODELOS_DIR, "modelo_fase.pkl")
+RUTA_SCALER    = os.path.join(_MODELOS_DIR, "scaler_fase.pkl")
+CSV_SALIDA     = os.path.join(_MODELOS_DIR, "evaluacion_curva_vs_ml_pushup.csv")
 
 # ---------------- CARGAR MODELO ----------------
 modelo = joblib.load(RUTA_MODELO)

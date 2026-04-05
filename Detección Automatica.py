@@ -12,10 +12,11 @@ TIEMPO_ESTABLE = 1.0
 UMBRAL_MOV = 8        # mas tolerante a vibracion
 FPS_EST = 25        
 
+_DIR = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS = {
-    "pushup": r"C:\Users\Acer\OneDrive - Instituto Politecnico Nacional\Desktop\Proyecto\Wall_push_up\Retroalimentación_Wall__push_up.py",
-    "dom_abierta": r"C:\Users\Acer\OneDrive - Instituto Politecnico Nacional\Desktop\6 semestre\proyecto\codigo\dominada_abierta\Retroalimentación_Dominada_Agarre_Abierto.py",
-    "dom_neutra": r"C:\Users\Acer\OneDrive - Instituto Politecnico Nacional\Desktop\6 semestre\proyecto\codigo\dominadas_cerradas\Retroalimentacion_tiempo_real_dominada_neutra.py"
+    "pushup":      os.path.join(_DIR, "Retroalimentación_Wall__push_up.py"),
+    "dom_abierta": os.path.join(_DIR, "Retroalimentación_Dominada_Agarre_Abierto.py"),
+    "dom_neutra":  os.path.join(_DIR, "Retroalimentacion_dominada_agarre_neutro.py"),
 }
 
 # -------- UTIL --------

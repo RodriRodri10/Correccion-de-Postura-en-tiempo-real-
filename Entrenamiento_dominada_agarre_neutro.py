@@ -15,9 +15,10 @@ warnings.filterwarnings("ignore")
 # --------------------------------------------------
 # CONFIG
 # --------------------------------------------------
-CARPETA_VIDEOS = r"C:\dominadas_video"
+_DIR           = os.path.dirname(os.path.abspath(__file__))
+CARPETA_VIDEOS = os.path.join(_DIR, "videos", "dominadas_neutro")
 
-BASE_DIR = r"C:\resultados_dominadas_uno"
+BASE_DIR = os.path.join(_DIR, "Modelos", "dominadas neutro")
 os.makedirs(BASE_DIR, exist_ok=True)
 
 RUTA_MODELO  = os.path.join(BASE_DIR, "modelo_fase_dominadas_rt.pkl")
