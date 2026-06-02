@@ -1,5 +1,5 @@
 opencv-python
-mediapipe
+mediapipe==0.10.14   # API legacy mp.solutions.pose (BlazePose GHUM Full). No subir a versiones que retiren solutions.*
 numpy
 pandas
 scipy

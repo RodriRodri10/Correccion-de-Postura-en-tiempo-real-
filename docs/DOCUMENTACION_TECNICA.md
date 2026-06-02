@@ -47,29 +47,29 @@ El conocimiento de "postura correcta" proviene exclusivamente de los videos de e
 
 ```mermaid
 flowchart TD
-    A([Usuario frente a cámara]) --> B[Detección Automatica.py]
+    A([Usuario frente a cámara]) --> B[deteccion_automatica.py]
     B --> C{Clasificación de ejercicio\ngeometría MediaPipe}
-    C -->|perfil| D[Retroalimentación_Wall__push_up.py]
-    C -->|cara a cámara| E[Retroalimentacion_dominada_agarre_neutro.py]
-    C -->|espalda a cámara| F[Retroalimentación_Dominada_Agarre_Abierto.py]
+    C -->|perfil| D[retroalimentacion_wall_pushup.py]
+    C -->|cara a cámara| E[retroalimentacion_dominada_neutra.py]
+    C -->|espalda a cámara| F[retroalimentacion_dominada_abierta.py]
 
-    D --> G[Modelos/walls_push_up/]
-    E --> H[Modelos/dominadas neutro/]
-    F --> I[Modelos/dominadas agarre abierto/]
+    D --> G[modelos/wall_pushup/]
+    E --> H[modelos/dominada_neutra/]
+    F --> I[modelos/dominada_abierta/]
 
     G --> J([Feedback + conteo reps en pantalla])
     H --> J
     I --> J
 
     subgraph Entrenamiento offline
-        K[Videos de referencia] --> L[Entrenamiento_*.py]
+        K[Videos de referencia] --> L[entrenamiento_*.py]
         L --> G
         L --> H
         L --> I
     end
 
     subgraph Validación
-        M[Video de prueba] --> N[Evaluacion_*.py]
+        M[Video de prueba] --> N[evaluacion_*.py]
         N --> O[Matriz de confusión GT vs ML]
     end
 ```
@@ -78,7 +78,7 @@ flowchart TD
 
 ## 3. Detección automática de ejercicio
 
-**Archivo:** `Detección Automatica.py`
+**Archivo:** `deteccion_automatica.py`
 
 ### Lógica geométrica
 
@@ -177,6 +177,52 @@ Los landmarks relevantes por índice:
 23 — cadera izq     24 — cadera der
 ```
 
+#### Detalle técnico del modelo subyacente
+
+> **Importante:** MediaPipe **no se entrena en este proyecto**. Es un modelo pre-entrenado por Google que se consume como caja negra. Lo único que se entrena en este repositorio es el `RandomForestClassifier` que opera *sobre* los ángulos derivados de estos landmarks (ver §4.6). La separación de responsabilidades es:
+>
+> - **MediaPipe (Google):** imagen RGB → 33 keypoints. Visión por computadora "difícil", ya resuelta.
+> - **Random Forest (este repo):** ángulos → fase del ejercicio. Clasificación "fácil" sobre datos limpios.
+
+**Modelo:** BlazePose (variante reciente **BlazePose GHUM**), expuesto vía la API *legacy* `mp.solutions.pose`. Es un **pipeline de dos etapas**:
+
+1. **Detector de persona** (corre 1 vez, o al perder el tracking): SSD ligero derivado de BlazeFace. Localiza la ROI del torso usando la **cara como ancla** (asume cabeza visible). Predice centro, escala y rotación.
+2. **Tracker de landmarks** (corre cada frame): CNN **encoder-decoder con skip-connections** (estilo U-Net) que regresa los 33 keypoints sobre la ROI recortada. Mientras mantenga confianza, **omite el detector** y reusa la ROI previa → de ahí su velocidad y estabilidad.
+
+**Arquitectura de la red de landmarks:**
+
+- Entrena con un enfoque combinado **heatmap + offset + regresión**: la rama de heatmap supervisa un *embedding* ligero que alimenta a la rama de regresión de coordenadas.
+- **En inferencia las capas de heatmap se eliminan**; solo queda la regresión → modelo más liviano.
+- Incluye un **clasificador de visibilidad por punto** (el campo `landmark.visibility`).
+- La coordenada `z` y los *world landmarks* en metros provienen del modelo estadístico 3D **GHUM**.
+
+**Entrada / salida:**
+
+- Entrada: imagen RGB redimensionada internamente a **256×256** (Lite/Full) o 512×512 (Heavy).
+- Salida: 33 keypoints × `(x, y, z, visibility, presence)` = **165 valores**. La topología de 33 puntos combina BlazeFace + BlazePalm + COCO (más puntos que el COCO estándar de 17, útil para fitness).
+
+**Variantes y costo (paper arXiv 2006.10204, Pixel 2, 1 core CPU):**
+
+| Variante | `model_complexity` | Parámetros | Cómputo | Velocidad | PCK@0.2 | Latencia CPU/GPU |
+|----------|--------------------|------------|---------|-----------|---------|------------------|
+| Lite | 0 | 1.3 M | 2.7 MFLOPs | ~310 FPS | 79.6 % | ~15 / ~5 ms |
+| **Full** ← usado aquí | **1** (por defecto) | **3.5 M** | **6.9 MFLOPs** | ~102 FPS | 84.1 % | ~30 / ~8 ms |
+| Heavy | 2 | red más profunda | — | — | mayor | 80+ / ~15-20 ms |
+
+Tamaño de los archivos `.tflite` (reporte Qualcomm/Dataloop): detector de pose ~3.14 MB, detector de landmarks ~12.9 MB.
+
+**Configuración efectiva en este proyecto:**
+
+Todos los scripts instancian `mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6)`. Como **no especifican `model_complexity`, usan el valor por defecto `1` (Full)** y `smooth_landmarks=True` (suavizado temporal del jitter, relevante porque luego se derivan velocidad/aceleración de los ángulos).
+
+**Versión:** `requirements.txt` fija `mediapipe==0.10.14` para garantizar la disponibilidad de la API `mp.solutions.pose`. Las versiones nuevas de MediaPipe empujan la *Tasks API* (`PoseLandmarker`) y van retirando el espacio `solutions.*` que este código usa; **no actualizar sin migrar la API primero**.
+
+**Referencias:**
+- BlazePose: On-device Real-time Body Pose tracking — arXiv [2006.10204](https://arxiv.org/abs/2006.10204)
+- BlazePose GHUM Holistic — arXiv [2206.11678](https://arxiv.org/abs/2206.11678)
+- Blog Google Research — [On-device Real-time Body Pose Tracking with MediaPipe BlazePose](https://research.google/blog/on-device-real-time-body-pose-tracking-with-mediapipe-blazepose/)
+- Doc oficial MediaPipe Pose (`model_complexity`, defaults) — [github.com/google-ai-edge/mediapipe](https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/pose.md)
+
 ### 4.2 Cálculo de ángulos articulares
 
 Función común a todos los scripts:
@@ -204,7 +250,8 @@ Retorna el ángulo **en el vértice `b`** entre los segmentos `b→a` y `b→c`,
 Wall Push-Up:
   codo    = ángulo(hombro, codo, muñeca)         lm[12,14,16] lado derecho
   hombro  = ángulo(codo, hombro, cadera)         lm[14,12,24]
-  espalda = ángulo(hombro, cadera, cadera)       ← BUG: vector nulo, siempre 0°
+  espalda = ángulo(hombro, cadera, [cadera_x, 0]) ← inclinación del tronco vs. vertical
+                                                  (antes (hombro,cadera,cadera) → 0°; corregido)
 
 Dominada Neutro:
   codo_der = ángulo(hombro_der, codo_der, muñeca_der)   lm[12,14,16]
@@ -340,7 +387,7 @@ En lugar de features por frame, se calcula la **media de cada ángulo en el segm
 X = [
     ang,           # ángulo codo derecho frame actual
     vel,           # (ang[t] - ang[t-1]) * fps   → vel. angular °/s
-    acc,           # BUG: usa vel_hist pero calcula igual que vel
+    acc,           # aceleración: misma diferencia finita aplicada a vel_hist
     ang_mean,      # media de ventana de 25 frames de ángulo
     vel_mean,      # media de ventana de 5 frames de velocidad
     ang_min,       # mínimo de ventana de 25 frames
@@ -545,7 +592,7 @@ stateDiagram-v2
 
 ## 6. Pipeline de evaluación
 
-Los scripts `Evaluacion_*.py` validan el modelo comparándolo contra un **Ground Truth algorítmico** (no anotaciones humanas) sobre un video de prueba.
+Los scripts `evaluacion_*.py` validan el modelo comparándolo contra un **Ground Truth algorítmico** (no anotaciones humanas) sobre un video de prueba.
 
 ```mermaid
 flowchart LR
@@ -583,7 +630,7 @@ flowchart LR
 
 | Aspecto | Wall Push-Up | Dom. Agarre Neutro | Dom. Agarre Abierto |
 |---------|-------------|---------------------|----------------------|
-| **Archivo entrenamiento** | `Entrenamiento_wall_push_up.py` | `Entrenamiento_dominada_agarre_neutro.py` | `Entrenamiento_Dominada_Agarre_Abierto.py` |
+| **Archivo entrenamiento** | `entrenamiento_wall_pushup.py` | `entrenamiento_dominada_neutra.py` | `entrenamiento_dominada_abierta.py` |
 | **Árbol de decisión** | RF 300 árboles | RF 400 árboles + balanceo | RF 400 árboles + balanceo |
 | **Fases** | 4 | 3 | 3 |
 | **Detección de reps** | Señal ponderada de ángulos | Flujo óptico vertical | Flujo óptico vertical |
@@ -635,41 +682,57 @@ flowchart TD
 ```
 Correccion-de-Postura-en-tiempo-real/
 │
-├── Detección Automatica.py              ← Punto de entrada. Detecta ejercicio y lanza script.
+├── README.md                              ← Entrada principal del proyecto
+├── requirements.txt                       ← Dependencias Python
+├── CLAUDE.md                              ← Notas operativas para asistentes
 │
-├── Entrenamiento_wall_push_up.py        ← Genera Modelos/walls_push_up/
-├── Entrenamiento_dominada_agarre_neutro.py
-├── Entrenamiento_Dominada_Agarre_Abierto.py
+├── docs/
+│   ├── README.md                          ← Índice de documentación
+│   ├── DOCUMENTACION_TECNICA.md           ← Este documento
+│   └── ESTADO_PROYECTO.md                 ← Estado actual y problemas activos
 │
-├── Evaluacion_wall_push_up.py           ← Valida GT vs ML. Requiere videos/*/prueba.mp4
-├── Evaluacion_dominada_agarre_neutro.py
-├── Evaluacion_dominada_agarre_abierto.py
+├── deteccion_automatica.py              ← Punto de entrada. Detecta ejercicio y lanza script.
 │
-├── Retroalimentación_Wall__push_up.py   ← Inferencia en tiempo real. Carga Modelos/walls_push_up/
-├── Retroalimentacion_dominada_agarre_neutro.py
-├── Retroalimentación_Dominada_Agarre_Abierto.py
+├── entrenamiento_wall_pushup.py         ← Genera modelos/wall_pushup/
+├── entrenamiento_dominada_neutra.py
+├── entrenamiento_dominada_abierta.py
 │
-├── Modelos/
-│   ├── walls_push_up/
+├── evaluacion_wall_pushup.py            ← Valida GT vs ML. Requiere videos/*/prueba.mp4
+├── evaluacion_dominada_neutra.py
+├── evaluacion_dominada_abierta.py
+│
+├── retroalimentacion_wall_pushup.py     ← Inferencia en tiempo real. Carga modelos/wall_pushup/
+├── retroalimentacion_dominada_neutra.py
+├── retroalimentacion_dominada_abierta.py
+│
+├── core/                                ← Paquete compartido (sin duplicación)
+│   ├── geometria.py                     ← calcular_angulo, distancia
+│   ├── pose.py                          ← nueva_pose (wrapper MediaPipe), índices landmarks
+│   ├── senales.py                       ← flujo_vertical (optical flow), suavizar_kalman
+│   ├── dinamica.py                      ← vel_ang, acc_ang, *_safe, fase_por_curva (neutra)
+│   ├── features.py                      ← features_frame de 41 features (abierta)
+│   └── config.py                        ← rutas centralizadas (modelos/, videos/)
+│
+├── modelos/
+│   ├── wall_pushup/
 │   │   ├── modelo_fase.pkl              ← RF entrenado (300 árboles, 3 features, 4 clases)
 │   │   ├── scaler_fase.pkl              ← StandardScaler ajustado en entrenamiento
 │   │   └── rangos_por_fase.npy          ← Dict {fase: {articulacion: {min, max, mean}}}
 │   │
-│   ├── dominadas neutro/
+│   ├── dominada_neutra/
 │   │   ├── modelo_fase_dominadas_rt.pkl ← FALTANTE — bloquea ejecución
 │   │   ├── scaler_fase_dominadas_rt.pkl ← Presente
 │   │   └── rangos_por_fase.npy          ← Presente (no usado en retroalimentación)
 │   │
-│   └── dominadas agarre abierto/
+│   └── dominada_abierta/
 │       ├── modelo_fases.pkl             ← RF entrenado (400 árboles, 41 features, 3 clases)
 │       ├── scaler_fases.pkl             ← StandardScaler ajustado en entrenamiento
 │       └── dataset_fases.csv            ← Dataset de entrenamiento serializado
 │
-├── requirements.txt
-└── videos/                              ← NO en repo. Requerido para entrenamiento/evaluación.
-    ├── wall_push_up/
-    ├── dominadas_neutro/
-    └── dominadas_abierto/
+└── videos/                              ← NO en repo (en .gitignore). Requerido para entrenar/evaluar.
+    ├── wall_pushup/
+    ├── dominada_neutra/
+    └── dominada_abierta/
 ```
 
 **Dependencias Python:**
@@ -689,17 +752,20 @@ joblib          — serialización de modelos (.pkl)
 
 ## 10. Limitaciones conocidas
 
-### Bugs activos
+### Bugs corregidos en el refactor
 
-| Bug | Archivo | Línea | Impacto |
-|-----|---------|-------|---------|
-| `import os` faltante | `Detección Automatica.py` | 15 | NameError al arrancar |
-| `acc_ang` idéntica a `vel_ang` | `Retroalimentacion_dominada_agarre_neutro.py` | 41–43 | Aceleración = velocidad; feature incorrecta |
-| Ángulo espalda siempre 0° | `Retroalimentación_Wall__push_up.py` | 200 | Feature inútil en predicción |
+| Bug | Archivo | Estado |
+|-----|---------|--------|
+| `import os` faltante | `deteccion_automatica.py` | Corregido (ya importa `os`) |
+| Orden de features distinto entre entrenamiento e inferencia (neutra) | `retroalimentacion_dominada_neutra.py`, `evaluacion_dominada_neutra.py` | Corregido (orden unificado) |
+| Ángulo de espalda siempre 0° (puntos iguales) | `entrenamiento_wall_pushup.py`, `retroalimentacion_wall_pushup.py`, `evaluacion_wall_pushup.py` | Corregido en código; requiere reentrenar el modelo |
 
-### Modelo faltante
+> Nota sobre `acc_ang`: tiene el mismo cuerpo que `vel_ang` pero recibe el historial de **velocidades**, por lo que sí calcula aceleración. No era un bug; se documenta como alias en `core/dinamica.py`.
 
-`Modelos/dominadas neutro/modelo_fase_dominadas_rt.pkl` no existe en el repositorio. `Retroalimentacion_dominada_agarre_neutro.py` llama a `joblib.load()` a nivel de módulo (línea 17), por lo que falla inmediatamente al ser importado o ejecutado.
+### Pendientes
+
+- **Modelo faltante:** `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl` no existe en el repositorio. `retroalimentacion_dominada_neutra.py` y `evaluacion_dominada_neutra.py` llaman a `joblib.load()` a nivel de módulo, por lo que fallan al ser importados o ejecutados hasta recuperar/reentrenar el modelo.
+- **Reentrenar wall push-up:** el modelo versionado se entrenó con la feature de espalda en `0.0`; reentrenar con `entrenamiento_wall_pushup.py` para incorporar la inclinación del tronco ya corregida.
 
 ### Diseño de Ground Truth
 
@@ -709,9 +775,9 @@ El etiquetado de fases de entrenamiento no usa anotaciones biomecánicas externa
 - Si los videos de entrenamiento tienen ejecuciones atípicas, los rangos capturados serán incorrectos.
 - El método de la Wall Push-Up (segmentación temporal fija) es el más frágil: una repetición lenta o rápida recibe las mismas proporciones de fase que una a velocidad normal.
 
-### Dependencia de cámara
+### Dependencia de cámara y videos
 
-Todos los scripts de retroalimentación y evaluación asumen `cv2.VideoCapture(0)` disponible. En entornos sin cámara (servidores, CI/CD) fallan sin manejo de error específico más allá del `print("Cámara no disponible")`.
+Los scripts de retroalimentación asumen `cv2.VideoCapture(0)` disponible. En entornos sin cámara (servidores, CI/CD) no pueden validar el flujo real. Los scripts de entrenamiento y evaluación dependen de archivos en `videos/`, carpeta que no está versionada en el repositorio.
 
 ### Invarianza de escala espacial
 

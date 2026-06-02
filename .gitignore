@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Videos (no versionados; ver docs/ESTADO_PROYECTO.md)
+videos/
+*.mp4
+*.avi
+*.mov
+
+# Artefactos de ejecución en tiempo real
+video_realtime_reps.mp4
+video_resultado_final.mp4
