@@ -45,6 +45,20 @@ El punto de entrada general es `deteccion_automatica.py`, que detecta la postura
 
 ## Instalacion
 
+**Atajo (recomendado).** Scripts de inicializacion rapida que crean el entorno e instalan dependencias:
+
+```bash
+./init.sh            # Linux / macOS (o Git Bash / WSL en Windows)
+./init.sh --docker   # ademas levanta la base de datos (PostgreSQL + PostgREST)
+```
+
+```bat
+init.bat             :: Windows (cmd.exe)
+init.bat --docker    :: ademas levanta la base de datos
+```
+
+**Manual.** Equivale a lo que hacen los scripts:
+
 ```bash
 /usr/bin/python3.11 -m venv .venv
 source .venv/bin/activate
