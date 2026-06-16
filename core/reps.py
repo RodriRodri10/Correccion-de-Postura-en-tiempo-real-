@@ -22,15 +22,58 @@ class FsmWallPushup:
     """
 
     def __init__(self):
-        raise NotImplementedError
+        self.estado = "WAIT_START"
+        self.frames_fase1 = 0
+        self.frames_rep = 0
+        self.visitadas = set()
+        self._reps = 0
 
     def update(self, fase):
         """Procesa una fase (int) de un frame. Devuelve self.reps."""
-        raise NotImplementedError
+        MIN_FRAMES_REP = 10
+        RESET_FRAMES = 8
+
+        if fase not in (1, 2, 3, 4):
+            return self._reps
+
+        if self.estado == "WAIT_START":
+            if fase == 1:
+                self.frames_fase1 += 1
+                if self.frames_fase1 >= 3:
+                    self.estado = "IN_REP"
+                    self.frames_rep = 0
+                    self.visitadas = {1}
+            else:
+                self.frames_fase1 = 0
+
+        elif self.estado == "IN_REP":
+            self.frames_rep += 1
+            self.visitadas.add(fase)
+
+            if self.visitadas >= {1, 2, 3, 4} and fase == 1 and self.frames_rep >= MIN_FRAMES_REP:
+                self._reps += 1
+                self.estado = "LOCKED"
+                self.frames_fase1 = 0
+            elif fase == 1 and self.frames_rep >= MIN_FRAMES_REP:
+                if 3 in self.visitadas or 4 in self.visitadas:
+                    self._reps += 1
+                    self.estado = "LOCKED"
+                    self.frames_fase1 = 0
+
+        elif self.estado == "LOCKED":
+            if fase == 1:
+                self.frames_fase1 += 1
+                if self.frames_fase1 >= RESET_FRAMES:
+                    self.estado = "WAIT_START"
+                    self.frames_fase1 = 0
+            else:
+                self.frames_fase1 = 0
+
+        return self._reps
 
     @property
     def reps(self):
-        raise NotImplementedError
+        return self._reps
 
 
 class FsmDominadaAbierta:
@@ -42,12 +85,37 @@ class FsmDominadaAbierta:
     """
 
     def __init__(self, frames_estables=5):
-        raise NotImplementedError
+        self.frames_estables = frames_estables
+        self.estado = 0  # ABAJO
+        self.cont_arriba = 0
+        self.cont_abajo = 0
+        self._reps = 0
 
     def update(self, fase):
         """Procesa una fase (int) de un frame. Devuelve self.reps."""
-        raise NotImplementedError
+        ABAJO, SUBE, ARRIBA, BAJA = 0, 1, 2, 3
+
+        if self.estado == ABAJO and fase == 2:
+            self.estado = SUBE
+
+        elif self.estado == SUBE and fase == 1:
+            self.cont_arriba += 1
+            if self.cont_arriba >= self.frames_estables:
+                self.estado = ARRIBA
+                self.cont_arriba = 0
+
+        elif self.estado == ARRIBA and fase == 2:
+            self.estado = BAJA
+
+        elif self.estado == BAJA and fase == 3:
+            self.cont_abajo += 1
+            if self.cont_abajo >= self.frames_estables:
+                self._reps += 1
+                self.estado = ABAJO
+                self.cont_abajo = 0
+
+        return self._reps
 
     @property
     def reps(self):
-        raise NotImplementedError
+        return self._reps

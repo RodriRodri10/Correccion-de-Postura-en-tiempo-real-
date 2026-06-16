@@ -28,7 +28,8 @@ def acumular(log, fase, correcto=None, errores=()):
 
     Muta ``log`` en sitio (append) y devuelve ``log``.
     """
-    raise NotImplementedError
+    log.append({"fase": fase, "correcto": correcto, "errores": list(errores)})
+    return log
 
 
 def resumen(log, reps, duracion_seg):
@@ -42,7 +43,20 @@ def resumen(log, reps, duracion_seg):
         - "top_errores": list[list] (los 3 errores mas frecuentes como [msg, conteo])
         - "duracion_seg": float
     """
-    raise NotImplementedError
+    import collections
+    frames_evaluados = sum(1 for r in log if r["correcto"] is not None)
+    frames_correctos = sum(1 for r in log if r["correcto"] is True)
+    pct_correcto = (100.0 * frames_correctos / frames_evaluados) if frames_evaluados else 0.0
+    todos_errores = [e for r in log for e in r["errores"]]
+    top_errores = [list(t) for t in collections.Counter(todos_errores).most_common(3)]
+    return {
+        "reps": reps,
+        "frames_evaluados": frames_evaluados,
+        "frames_correctos": frames_correctos,
+        "pct_correcto": pct_correcto,
+        "top_errores": top_errores,
+        "duracion_seg": float(duracion_seg),
+    }
 
 
 def guardar(resumen_dict, ejercicio, dir_sesiones):
@@ -51,7 +65,13 @@ def guardar(resumen_dict, ejercicio, dir_sesiones):
     Crea el directorio si no existe. El nombre de archivo es
     ``<ejercicio>_<timestamp>.json``. Devuelve la ruta escrita.
     """
-    raise NotImplementedError
+    os.makedirs(dir_sesiones, exist_ok=True)
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    nombre = f"{ejercicio}_{timestamp}.json"
+    ruta = os.path.join(dir_sesiones, nombre)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump(resumen_dict, f, ensure_ascii=False, indent=2)
+    return ruta
 
 
 def cargar_ultima(dir_sesiones, ejercicio=None):
@@ -60,4 +80,22 @@ def cargar_ultima(dir_sesiones, ejercicio=None):
     Si ``ejercicio`` se indica, filtra por el prefijo ``<ejercicio>_``.
     Devuelve el dict cargado o None si no hay sesiones / no existe el dir.
     """
-    raise NotImplementedError
+    if not os.path.isdir(dir_sesiones):
+        return None
+
+    archivos = []
+    for fname in os.listdir(dir_sesiones):
+        if not fname.endswith(".json"):
+            continue
+        if ejercicio and not fname.startswith(f"{ejercicio}_"):
+            continue
+        fpath = os.path.join(dir_sesiones, fname)
+        archivos.append((os.path.getmtime(fpath), fpath))
+
+    if not archivos:
+        return None
+
+    archivos.sort(reverse=True)
+    _, fpath = archivos[0]
+    with open(fpath, encoding="utf-8") as f:
+        return json.load(f)

@@ -1,11 +1,10 @@
 # Detección automática del ejercicio y lanzamiento del script de retroalimentación.
-import os
 import cv2
 import numpy as np
 import subprocess
 import sys
 
-from core import config
+from core import catalogo
 from core.geometria import distancia
 from core.pose import nueva_pose
 
@@ -13,22 +12,6 @@ from core.pose import nueva_pose
 TIEMPO_ESTABLE = 1.0
 UMBRAL_MOV = 8        # mas tolerante a vibracion
 FPS_EST = 25
-
-SCRIPTS = {
-    "pushup":      os.path.join(config.RAIZ, "retroalimentacion_wall_pushup.py"),
-    "dom_abierta": os.path.join(config.RAIZ, "retroalimentacion_dominada_abierta.py"),
-    "dom_neutra":  os.path.join(config.RAIZ, "retroalimentacion_dominada_neutra.py"),
-}
-
-MODELOS_REQUERIDOS = {
-    "pushup": os.path.join(config.DIR_WALL_PUSHUP, "modelo_fase.pkl"),
-    "dom_abierta": os.path.join(config.DIR_DOM_ABIERTA, "modelo_fases.pkl"),
-    "dom_neutra": os.path.join(config.DIR_DOM_NEUTRA, "modelo_fase_dominadas_rt.pkl"),
-}
-
-
-def recursos_disponibles(ejercicio):
-    return os.path.exists(SCRIPTS[ejercicio]) and os.path.exists(MODELOS_REQUERIDOS[ejercicio])
 
 
 # -------- DETECCION EJERCICIO --------
@@ -81,7 +64,7 @@ def main():
                 lm = res.pose_landmarks.landmark
                 ejercicio = detectar_ejercicio(lm, w, h)
 
-                if not recursos_disponibles(ejercicio):
+                if not catalogo.disponible(ejercicio):
                     estable_frames = 0
                     sho_prev = None
                     msg = f"{ejercicio} no disponible: falta modelo"
@@ -132,7 +115,8 @@ def main():
                     cap.release()
                     cv2.destroyAllWindows()
 
-                    subprocess.call([sys.executable, SCRIPTS[ejercicio]])
+                    script_path = catalogo.EJERCICIOS[ejercicio]["script"]
+                    subprocess.call([sys.executable, script_path])
                     return
 
             cv2.putText(

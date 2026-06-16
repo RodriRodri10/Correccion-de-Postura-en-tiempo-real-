@@ -22,7 +22,7 @@ command -v claude >/dev/null 2>&1 || { echo "ERROR: la CLI 'claude' no esta en P
 for i in $(seq 1 "$N"); do
   echo "================ Ralph iteracion $i/$N (modelo: $MODELO) ================"
 
-  if grep -q "STATUS: DONE" ralph/PROGRESS.md; then
+  if grep -q "^STATUS: DONE" ralph/PROGRESS.md; then
     echo "PRD completo (STATUS: DONE). Fin."
     exit 0
   fi
@@ -38,7 +38,7 @@ for i in $(seq 1 "$N"); do
   fi
 done
 
-if grep -q "STATUS: DONE" ralph/PROGRESS.md; then
+if grep -q "^STATUS: DONE" ralph/PROGRESS.md; then
   echo "PRD completo (STATUS: DONE)."
 else
   echo "Iteraciones agotadas ($N). Revisa ralph/PROGRESS.md y el ultimo verify."

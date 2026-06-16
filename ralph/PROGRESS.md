@@ -6,8 +6,9 @@ Orden por dependencias. Un ítem por iteracion, de arriba hacia abajo.
 Cuando todos esten en `[x]` y `ralph/verify.sh` pase, cambia la primera linea a
 `STATUS: DONE`.
 
-- [ ] **core/sesion.py** — implementar `acumular`, `resumen`, `guardar`,
+- [x] **core/sesion.py** — implementar `acumular`, `resumen`, `guardar`,
   `cargar_ultima` segun `ralph/specs/03-sesion-resumen.md`. Verde: `tests/test_sesion.py`.
+  > Implementados los 4 metodos; 5/5 tests en verde. `collections.Counter.most_common(3)` con conversion a lista para sobrevivir round-trip JSON.
 - [ ] **core/reps.py** — implementar `FsmWallPushup` y `FsmDominadaAbierta` segun
   `ralph/specs/04-reps-fsm.md`. Verde: `tests/test_reps.py`.
 - [ ] **core/catalogo.py** — implementar `EJERCICIOS`, `disponible`, `disponibles`

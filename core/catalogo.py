@@ -19,17 +19,39 @@ Claves del MVP: "pushup" y "dom_abierta". (Se permite incluir "dom_neutra"
 en el registro, pero disponible("dom_neutra") debe devolver False mientras
 falte su modelo.)
 """
+import os
 from core import config
 
-# Registro de ejercicios. Ralph lo completa (placeholder vacio a proposito).
-EJERCICIOS = {}
+EJERCICIOS = {
+    "pushup": {
+        "nombre": "Wall push-up",
+        "script": os.path.join(config.RAIZ, "retroalimentacion_wall_pushup.py"),
+        "modelo": os.path.join(config.DIR_WALL_PUSHUP, "modelo_fase.pkl"),
+        "vista": "lateral",
+    },
+    "dom_abierta": {
+        "nombre": "Dominada agarre abierto",
+        "script": os.path.join(config.RAIZ, "retroalimentacion_dominada_abierta.py"),
+        "modelo": os.path.join(config.DIR_DOM_ABIERTA, "modelo_fases.pkl"),
+        "vista": "posterior",
+    },
+    "dom_neutra": {
+        "nombre": "Dominada agarre neutro",
+        "script": os.path.join(config.RAIZ, "retroalimentacion_dominada_neutra.py"),
+        "modelo": os.path.join(config.DIR_DOM_NEUTRA, "modelo_fase_dominadas_rt.pkl"),
+        "vista": "frontal",
+    },
+}
 
 
 def disponible(clave):
     """True si existen el script y el modelo del ejercicio ``clave``."""
-    raise NotImplementedError
+    if clave not in EJERCICIOS:
+        return False
+    entrada = EJERCICIOS[clave]
+    return os.path.exists(entrada["script"]) and os.path.exists(entrada["modelo"])
 
 
 def disponibles():
     """Lista de claves cuyo ejercicio esta disponible (script + modelo)."""
-    raise NotImplementedError
+    return [clave for clave in EJERCICIOS if disponible(clave)]
