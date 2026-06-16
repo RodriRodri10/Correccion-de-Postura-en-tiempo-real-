@@ -20,7 +20,7 @@ videos de referencia
     -> scripts de evaluacion
 ```
 
-El punto de entrada general es `deteccion_automatica.py`, que detecta la postura inicial con la camara y lanza el script de retroalimentacion correspondiente.
+El punto de entrada general es `deteccion_automatica.py`, que detecta la postura inicial con la camara y lanza el script de retroalimentacion correspondiente. Si detecta un ejercicio cuyo modelo falta, muestra que no esta disponible en vez de lanzar un script que fallaria.
 
 ## Estructura principal
 
@@ -47,10 +47,28 @@ El punto de entrada general es `deteccion_automatica.py`, que detecta la postura
 ## Instalacion
 
 ```bash
-python -m venv .venv
+/usr/bin/python3.11 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
 ```
+
+Se usa Python 3.11 porque `mediapipe==0.10.14` no es compatible de forma confiable con Python 3.13. El `requirements.txt` tambien fija `scikit-learn==1.6.1`, que coincide con la version usada para serializar los modelos `.pkl` versionados.
+
+## Ejecucion rapida
+
+```bash
+source .venv/bin/activate
+python retroalimentacion_wall_pushup.py
+```
+
+Tambien se puede probar:
+
+```bash
+python retroalimentacion_dominada_abierta.py
+```
+
+Los scripts en tiempo real usan `cv2.VideoCapture(0)` y se cierran con `Esc`.
 
 ## Estado actual
 

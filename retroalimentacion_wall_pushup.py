@@ -2,6 +2,7 @@
 import os
 import cv2
 import numpy as np
+import pandas as pd
 import joblib
 
 from core import config
@@ -14,6 +15,7 @@ RUTA_MODELO = os.path.join(_MODELOS_DIR, "modelo_fase.pkl")
 RUTA_SCALER = os.path.join(_MODELOS_DIR, "scaler_fase.pkl")
 RUTA_RANGOS = os.path.join(_MODELOS_DIR, "rangos_por_fase.npy")
 RUTA_VIDEO = os.path.join(config.RAIZ, "video_realtime_reps.mp4")
+FEATURE_COLUMNS = ["Codo_mean", "Hombro_mean", "Espalda_mean"]
 
 
 # ---------- RECURSOS ----------
@@ -26,7 +28,10 @@ def cargar_recursos():
 
 # ---------- FEATURE ----------
 def construir_feature_frame(curr_ang, _):
-    return np.array([curr_ang["codo"], curr_ang["hombro"], curr_ang["espalda"]], dtype=float).reshape(1, -1)
+    return pd.DataFrame(
+        [[curr_ang["codo"], curr_ang["hombro"], curr_ang["espalda"]]],
+        columns=FEATURE_COLUMNS,
+    )
 
 
 # ---------- FEEDBACK ----------

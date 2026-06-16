@@ -20,6 +20,16 @@ SCRIPTS = {
     "dom_neutra":  os.path.join(config.RAIZ, "retroalimentacion_dominada_neutra.py"),
 }
 
+MODELOS_REQUERIDOS = {
+    "pushup": os.path.join(config.DIR_WALL_PUSHUP, "modelo_fase.pkl"),
+    "dom_abierta": os.path.join(config.DIR_DOM_ABIERTA, "modelo_fases.pkl"),
+    "dom_neutra": os.path.join(config.DIR_DOM_NEUTRA, "modelo_fase_dominadas_rt.pkl"),
+}
+
+
+def recursos_disponibles(ejercicio):
+    return os.path.exists(SCRIPTS[ejercicio]) and os.path.exists(MODELOS_REQUERIDOS[ejercicio])
+
 
 # -------- DETECCION EJERCICIO --------
 def detectar_ejercicio(lm, w, h):
@@ -70,6 +80,23 @@ def main():
             if res.pose_landmarks:
                 lm = res.pose_landmarks.landmark
                 ejercicio = detectar_ejercicio(lm, w, h)
+
+                if not recursos_disponibles(ejercicio):
+                    estable_frames = 0
+                    sho_prev = None
+                    msg = f"{ejercicio} no disponible: falta modelo"
+                    cv2.putText(
+                        frame, msg,
+                        (30, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1, (0, 255, 255), 3
+                    )
+                    cv2.imshow("Seleccion de ejercicio", frame)
+
+                    if cv2.waitKey(1) & 0xFF == 27:
+                        break
+
+                    continue
 
                 # estabilidad usando hombro derecho
                 sho = np.array([lm[12].x * w, lm[12].y * h])

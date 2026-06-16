@@ -1,6 +1,6 @@
 # Estado del Proyecto - Correccion de Postura en Tiempo Real
 
-**Fecha de revision:** 2026-06-01
+**Fecha de revision:** 2026-06-14
 
 ## Resumen ejecutivo
 
@@ -11,6 +11,7 @@ Estado más importante:
 - Wall push-up tiene modelo y scaler versionados. El bug del ángulo de espalda fue corregido en el código (ahora es la inclinación del tronco vs. la vertical); el modelo versionado debe reentrenarse para aprovecharlo.
 - Dominada con agarre abierto tiene modelo, scaler y dataset versionados.
 - Dominada con agarre neutro sigue sin poder ejecutarse porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`. El desajuste de orden de features ya fue corregido.
+- El entorno local reproducible usa Python 3.11, `mediapipe==0.10.14` y `scikit-learn==1.6.1`; esta version de scikit-learn coincide con los modelos `.pkl` versionados.
 - No hay carpeta `videos/` versionada, por lo que entrenamiento y evaluación no son reproducibles desde cero con solo clonar el repo.
 
 ## Estado por componente
@@ -19,7 +20,7 @@ Estado más importante:
 
 | Componente | Archivo | Estado |
 |------------|---------|--------|
-| Deteccion automatica | `deteccion_automatica.py` | Implementada; `import os` corregido. |
+| Deteccion automatica | `deteccion_automatica.py` | Implementada; valida que exista el script y modelo antes de lanzar retroalimentación. |
 | Lanzamiento de scripts | `SCRIPTS` en `deteccion_automatica.py` | Rutas relativas vía `core/config.py`, apuntan a los scripts renombrados. |
 
 ### Modelos versionados
@@ -69,8 +70,17 @@ Estado más importante:
 
 - **P1 - `import os` faltante:** corregido en `deteccion_automatica.py`.
 - **P3 - Orden de features en dominada neutra:** inferencia y evaluación ahora usan el mismo orden que el entrenamiento (`ang, vel, acc, ang_mean, ang_min, ang_max, vel_mean`).
+- **Detector automático robusto:** no lanza retroalimentación si falta el modelo requerido; muestra el ejercicio como no disponible.
+- **Contrato de features en Wall Push-Up:** retroalimentación y evaluación envían `Codo_mean`, `Hombro_mean`, `Espalda_mean`, igual que el scaler entrenado.
+- **Evaluación de dominada abierta:** el ground truth algorítmico ya usa el mismo mapeo de clases que el entrenamiento (`1=Arriba`, `2=Movimiento/Transición`, `3=Abajo`).
 - **Nombres y rutas frágiles:** archivos y carpetas renombrados a ASCII sin espacios; rutas centralizadas en `core/config.py`.
 - **Duplicación de código:** helpers comunes movidos a `core/`.
+
+## Validacion reciente
+
+- `python -m py_compile core/*.py *.py` pasa dentro de `.venv`.
+- La cámara local abre con `cv2.VideoCapture(0)`.
+- `retroalimentacion_wall_pushup.py` arranca con MediaPipe y procesa frames; la prueba fue detenida con `timeout`.
 
 ## Proximos pasos sugeridos
 

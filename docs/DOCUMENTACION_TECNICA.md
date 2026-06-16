@@ -132,6 +132,8 @@ Si el hombro derecho se desplaza más de 8px entre frames consecutivos, el conta
 subprocess.call([sys.executable, SCRIPTS[ejercicio]])
 ```
 
+Antes del countdown se valida que existan el script y el modelo requeridos para el ejercicio detectado. Si, por ejemplo, se detecta dominada neutra y falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`, el detector muestra `dom_neutra no disponible: falta modelo` y no lanza el subprocess.
+
 ---
 
 ## 4. Pipeline de entrenamiento
@@ -215,7 +217,7 @@ Tamaño de los archivos `.tflite` (reporte Qualcomm/Dataloop): detector de pose 
 
 Todos los scripts instancian `mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6)`. Como **no especifican `model_complexity`, usan el valor por defecto `1` (Full)** y `smooth_landmarks=True` (suavizado temporal del jitter, relevante porque luego se derivan velocidad/aceleración de los ángulos).
 
-**Versión:** `requirements.txt` fija `mediapipe==0.10.14` para garantizar la disponibilidad de la API `mp.solutions.pose`. Las versiones nuevas de MediaPipe empujan la *Tasks API* (`PoseLandmarker`) y van retirando el espacio `solutions.*` que este código usa; **no actualizar sin migrar la API primero**.
+**Versión:** `requirements.txt` fija `mediapipe==0.10.14` para garantizar la disponibilidad de la API `mp.solutions.pose`. Las versiones nuevas de MediaPipe empujan la *Tasks API* (`PoseLandmarker`) y van retirando el espacio `solutions.*` que este código usa; **no actualizar sin migrar la API primero**. El entorno reproducible se crea con Python 3.11.
 
 **Referencias:**
 - BlazePose: On-device Real-time Body Pose tracking — arXiv [2006.10204](https://arxiv.org/abs/2006.10204)
@@ -381,6 +383,8 @@ X = [Codo_mean, Hombro_mean, Espalda_mean]
 
 En lugar de features por frame, se calcula la **media de cada ángulo en el segmento de la fase**. El modelo recibe una fila por fase por repetición.
 
+El scaler versionado conserva esos nombres de columnas; por eso la retroalimentación y la evaluación construyen un `DataFrame` con `Codo_mean`, `Hombro_mean`, `Espalda_mean` antes de llamar a `scaler.transform`.
+
 #### Dominada Neutro — 7 features por frame
 
 ```
@@ -389,13 +393,16 @@ X = [
     vel,           # (ang[t] - ang[t-1]) * fps   → vel. angular °/s
     acc,           # aceleración: misma diferencia finita aplicada a vel_hist
     ang_mean,      # media de ventana de 25 frames de ángulo
-    vel_mean,      # media de ventana de 5 frames de velocidad
     ang_min,       # mínimo de ventana de 25 frames
-    ang_max        # máximo de ventana de 25 frames
+    ang_max,       # máximo de ventana de 25 frames
+    vel_mean,      # media de ventana de 5 frames de velocidad
 ]
 ```
 
 La intención es capturar no solo la posición angular sino la **dinámica temporal**: si el ángulo está subiendo/bajando rápido, en qué zona del rango de movimiento se encuentra.
+
+> El orden anterior es contractual: entrenamiento, retroalimentación y evaluación
+> usan exactamente `ang, vel, acc, ang_mean, ang_min, ang_max, vel_mean`.
 
 #### Dominada Abierto — 41 features por frame
 
@@ -449,12 +456,16 @@ modelo = RandomForestClassifier(
 modelo.fit(X_scaled, y)
 ```
 
-El `StandardScaler` es imprescindible porque los features tienen escalas muy distintas:
+El `StandardScaler` se conserva como parte del pipeline entrenado y debe aplicarse
+en inferencia con el mismo orden de features. Los features tienen escalas muy
+distintas:
 - Ángulos: [0°, 180°]
 - Velocidades angulares: [-1000, 1000] °/s aprox.
 - Distancia de agarre (grip): [0, ancho_frame] píxeles
 
-Sin normalización, features de mayor escala dominarían las decisiones de los árboles.
+En Random Forest el escalado no es estrictamente necesario para que el árbol
+pueda dividir por umbrales; aun así, si el modelo fue entrenado con datos
+escalados, la misma transformación es obligatoria al predecir.
 
 **Balanceo de clases (Dominada Neutro):**
 
@@ -617,8 +628,8 @@ flowchart LR
 - **Dominada Abierto:** `fase_biomecanica` basada en ángulo normalizado al rango global del video (`ang_min`, `ang_max` pre-calculados) y umbral de velocidad:
   ```python
   si |vel| > 15°/s     → Fase 2 (movimiento)
-  si ang_norm ≥ 0.75   → Fase 3 (arriba)
-  si ang_norm ≤ 0.25   → Fase 1 (abajo)
+  si ang_norm ≥ 0.75   → Fase 1 (arriba)
+  si ang_norm ≤ 0.25   → Fase 3 (abajo)
   sino                 → Fase 2
   ```
 
@@ -748,6 +759,16 @@ scikit-learn    — RandomForestClassifier, StandardScaler, métricas
 joblib          — serialización de modelos (.pkl)
 ```
 
+Versiones fijadas por compatibilidad:
+
+```
+Python 3.11
+mediapipe==0.10.14
+scikit-learn==1.6.1
+```
+
+`scikit-learn==1.6.1` coincide con la versión usada para serializar los modelos `.pkl` versionados; cargar esos modelos con versiones más nuevas puede producir advertencias o resultados no garantizados.
+
 ---
 
 ## 10. Limitaciones conocidas
@@ -759,6 +780,8 @@ joblib          — serialización de modelos (.pkl)
 | `import os` faltante | `deteccion_automatica.py` | Corregido (ya importa `os`) |
 | Orden de features distinto entre entrenamiento e inferencia (neutra) | `retroalimentacion_dominada_neutra.py`, `evaluacion_dominada_neutra.py` | Corregido (orden unificado) |
 | Ángulo de espalda siempre 0° (puntos iguales) | `entrenamiento_wall_pushup.py`, `retroalimentacion_wall_pushup.py`, `evaluacion_wall_pushup.py` | Corregido en código; requiere reentrenar el modelo |
+| Nombres de columnas faltantes para scaler de Wall Push-Up | `retroalimentacion_wall_pushup.py`, `evaluacion_wall_pushup.py` | Corregido (`Codo_mean`, `Hombro_mean`, `Espalda_mean`) |
+| Mapeo de fases invertido en evaluación de dominada abierta | `evaluacion_dominada_abierta.py` | Corregido (`1=Arriba`, `2=Movimiento`, `3=Abajo`) |
 
 > Nota sobre `acc_ang`: tiene el mismo cuerpo que `vel_ang` pero recibe el historial de **velocidades**, por lo que sí calcula aceleración. No era un bug; se documenta como alias en `core/dinamica.py`.
 

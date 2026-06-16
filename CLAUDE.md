@@ -22,11 +22,12 @@ El sistema combina dos modelos muy distintos. Entenderlo es indispensable antes 
 - Variante **Full** (`model_complexity=1`, valor por defecto al no especificarlo); ~3.5M parametros, 6.9 MFLOPs, entrada 256x256, `smooth_landmarks=True`.
 - Pipeline interno de 2 etapas: detector de persona (tipo BlazeFace) + tracker de landmarks (CNN encoder-decoder).
 - `requirements.txt` fija `mediapipe==0.10.14` para garantizar que `mp.solutions.pose` siga disponible (versiones nuevas empujan `PoseLandmarker` y retiran `solutions.*`). **No actualizar sin migrar la API.**
+- `requirements.txt` fija `scikit-learn==1.6.1` porque los modelos `.pkl` versionados fueron serializados con esa version.
 - Indices de landmarks usados: 0 nariz; 11/12 hombros; 13/14 codos; 15/16 munecas; 23/24 caderas (constantes en `core/pose.py`).
 
 ## Stack tecnologico
 
-- Python 3.x — en este entorno el binario es `python3` (`python` no existe).
+- Python 3.11 — crear el entorno con `/usr/bin/python3.11 -m venv .venv`. Evitar el `python3` de Miniconda 3.13 para este repo porque no es una base confiable para `mediapipe==0.10.14`.
 - MediaPipe Pose (BlazePose) — deteccion de landmarks.
 - OpenCV — captura/procesamiento de video y flujo optico (Farneback).
 - scikit-learn — RandomForestClassifier, StandardScaler, metricas.
@@ -40,7 +41,7 @@ El sistema combina dos modelos muy distintos. Entenderlo es indispensable antes 
 Nombres ASCII (sin acentos ni espacios) y logica comun centralizada en `core/`.
 
 ```text
-├── deteccion_automatica.py            # punto de entrada: detecta ejercicio y lanza el script
+├── deteccion_automatica.py            # punto de entrada: detecta ejercicio y valida recursos antes de lanzar
 ├── entrenamiento_wall_pushup.py       # videos -> modelos/wall_pushup/
 ├── entrenamiento_dominada_neutra.py
 ├── entrenamiento_dominada_abierta.py
@@ -77,6 +78,8 @@ Pipeline comun de entrenamiento: video -> MediaPipe -> angulos -> deteccion de r
 
 Orden EXACTO de features de dominada neutra (entrenamiento = inferencia = evaluacion): `ang, vel, acc, ang_mean, ang_min, ang_max, vel_mean`.
 
+Orden/nombres de features de wall push-up para el scaler versionado: `Codo_mean, Hombro_mean, Espalda_mean`.
+
 ## Estado tecnico relevante
 
 - Rutas centralizadas en `core/config.py` (derivadas de la ubicacion del repo).
@@ -85,15 +88,19 @@ Orden EXACTO de features de dominada neutra (entrenamiento = inferencia = evalua
 - **Resuelto P1:** `deteccion_automatica.py` ya importa `os`.
 - **Resuelto P3:** orden de features de neutra unificado en los tres pipelines.
 - **Resuelto P4 (codigo):** el angulo de espalda es la inclinacion del tronco vs. la vertical (`calcular_angulo(hombro, cadera, [cadera_x, 0])`). El RandomForest actual ignora esa columna por ser constante en el entrenamiento previo, asi que la prediccion no cambia hasta reentrenar.
+- **Resuelto P5a:** `deteccion_automatica.py` valida script/modelo requerido antes del countdown; si falta el modelo de neutra, no lanza un subprocess que fallaria.
+- **Resuelto P6:** evaluacion de dominada abierta usa el mismo mapeo de clases que entrenamiento/inferencia (`1=Arriba`, `2=Movimiento/Transicion`, `3=Abajo`).
+- **Resuelto P7:** wall push-up envia DataFrames con nombres de columna al scaler en retroalimentacion/evaluacion.
 - `acc_ang` NO es un bug: misma diferencia finita que `vel_ang` pero aplicada al historial de velocidades (por eso es un alias en `core/dinamica.py`).
 - No hay tests automatizados; la validacion se hace con `evaluacion_*.py` y un GT algoritmico (no anotacion humana).
 
 ## Ejecucion y validacion
 
-- Entorno actual: dependencias **no instaladas** y **sin camara ni `videos/`**. La unica validacion posible aqui es estatica.
-- Validacion estatica: `python3 -m py_compile core/*.py *.py`.
-- Para correr de verdad: `pip install -r requirements.txt`; entrenar necesita `videos/<ejercicio>/*.mp4`; retroalimentacion necesita webcam (`cv2.VideoCapture(0)`); evaluacion necesita `videos/<ejercicio>/prueba.mp4`.
-- Smoke-test de imports (tras instalar deps): `python3 -c "import core.geometria, core.pose, core.features, core.dinamica, core.senales, core.config"`.
+- Entorno actual: `.venv` creado con Python 3.11, dependencias instaladas y camara local accesible (`cv2.VideoCapture(0)` abre). Sigue sin existir `videos/`.
+- Validacion estatica: `.venv/bin/python -m py_compile core/*.py *.py`.
+- Para correr de verdad: `source .venv/bin/activate`; usar `python retroalimentacion_wall_pushup.py`, `python retroalimentacion_dominada_abierta.py` o `python deteccion_automatica.py`. El detector automatico bloquea ejercicios sin modelo.
+- Entrenar necesita `videos/<ejercicio>/*.mp4`; evaluacion necesita `videos/<ejercicio>/prueba.mp4`.
+- Smoke-test de imports: `.venv/bin/python -c "import core.geometria, core.pose, core.features, core.dinamica, core.senales, core.config"`.
 
 ## Convenciones al modificar codigo
 

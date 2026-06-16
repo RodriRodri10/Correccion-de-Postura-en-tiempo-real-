@@ -42,10 +42,10 @@ def fase_biomecanica(ang, vel, ang_min, ang_max,
         return 2  # Movimiento
 
     if ang_norm >= ang_high:
-        return 3  # Arriba
+        return 1  # Arriba
 
     if ang_norm <= ang_low:
-        return 1  # Abajo
+        return 3  # Abajo
 
     return 2
 
@@ -149,15 +149,15 @@ cm = confusion_matrix(df["fase_gt"], df["fase_ml"], labels=[1, 2, 3])
 print("\nMATRIZ DE CONFUSION (GT vs ML)")
 print(pd.DataFrame(
     cm,
-    index=["Abajo", "Movimiento", "Arriba"],
-    columns=["Abajo", "Movimiento", "Arriba"]
+    index=["Arriba", "Movimiento", "Abajo"],
+    columns=["Arriba", "Movimiento", "Abajo"]
 ))
 
 print("\nREPORTE DE CLASIFICACION")
 print(classification_report(
     df["fase_gt"],
     df["fase_ml"],
-    target_names=["Abajo", "Movimiento", "Arriba"]
+    target_names=["Arriba", "Movimiento", "Abajo"]
 ))
 
 print("\nCSV generado en:")

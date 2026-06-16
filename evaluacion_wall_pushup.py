@@ -19,6 +19,7 @@ VIDEO = os.path.join(config.VIDEOS_WALL_PUSHUP, "prueba.mp4")
 RUTA_MODELO = os.path.join(_MODELOS_DIR, "modelo_fase.pkl")
 RUTA_SCALER = os.path.join(_MODELOS_DIR, "scaler_fase.pkl")
 CSV_SALIDA = os.path.join(_MODELOS_DIR, "evaluacion_curva_vs_ml_pushup.csv")
+FEATURE_COLUMNS = ["Codo_mean", "Hombro_mean", "Espalda_mean"]
 
 # ---------------- CARGAR MODELO ----------------
 modelo = joblib.load(RUTA_MODELO)
@@ -111,7 +112,10 @@ with nueva_pose() as pose:
 
             # Predicción ML
             if fase_gt != -1:
-                X = np.array([[ang_codo, ang_hombro, ang_espalda]])
+                X = pd.DataFrame(
+                    [[ang_codo, ang_hombro, ang_espalda]],
+                    columns=FEATURE_COLUMNS,
+                )
                 Xs = scaler.transform(X)
                 fase_ml = int(modelo.predict(Xs)[0])
 

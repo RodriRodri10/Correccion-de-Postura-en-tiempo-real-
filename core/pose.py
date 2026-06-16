@@ -3,8 +3,16 @@
 Centraliza la creación del estimador de pose para que todos los scripts usen
 la misma configuración (modelo Full por defecto, suavizado activado).
 """
+import warnings
+
 import numpy as np
 import mediapipe as mp
+
+warnings.filterwarnings(
+    "ignore",
+    message=r"SymbolDatabase\.GetPrototype\(\) is deprecated.*",
+    category=UserWarning,
+)
 
 mp_pose = mp.solutions.pose
 
