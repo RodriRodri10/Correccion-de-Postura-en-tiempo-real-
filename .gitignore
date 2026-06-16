@@ -17,3 +17,6 @@ video_resultado_final.mp4
 
 # Resumenes de sesion generados por la app (no versionados)
 sesiones/
+
+# Configuracion de entorno (DB, passwords, etc.)
+.env

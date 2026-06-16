@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import joblib
 
-from core import config, sesion
+from core import config, sesion, db
 from core.geometria import angulo
 from core.pose import nueva_pose
 from core.features import features_frame, nuevo_historial
@@ -148,6 +148,7 @@ def main():
     dur = time.time() - t0
     r = sesion.resumen(log, fsm.reps, dur)
     sesion.guardar(r, "dom_abierta", os.path.join(config.RAIZ, "sesiones"))
+    db.enviar_sesion(r, "dom_abierta")
 
 
 # --------------------------------------------------

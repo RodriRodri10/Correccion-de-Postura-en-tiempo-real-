@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import joblib
 
-from core import config, sesion
+from core import config, sesion, db
 from core.geometria import calcular_angulo
 from core.pose import mp_pose, nueva_pose
 from core.reps import FsmWallPushup
@@ -225,7 +225,7 @@ def main():
 
             dibujar_barra_y_rep(frame, fase_pred, fsm.reps)
 
-            cv2.putText(frame, f"Reps: {fsm['reps']}", (w - 220, 120),
+            cv2.putText(frame, f"Reps: {fsm.reps}", (w - 220, 120),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 255, 0), 3)
 
             y = 80
@@ -265,6 +265,7 @@ def main():
     dur = time.time() - t0
     r = sesion.resumen(log, fsm.reps, dur)
     sesion.guardar(r, "pushup", os.path.join(config.RAIZ, "sesiones"))
+    db.enviar_sesion(r, "pushup")
 
 
 # ---------- EJECUTAR ----------

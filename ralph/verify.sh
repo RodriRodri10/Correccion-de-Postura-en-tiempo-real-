@@ -13,7 +13,7 @@ echo "== py_compile =="
 "$PY" -m py_compile core/*.py *.py || { echo "FALLO: py_compile"; exit 1; }
 
 echo "== smoke de imports =="
-"$PY" -c "import core.geometria, core.pose, core.features, core.dinamica, core.senales, core.config, core.sesion, core.reps, core.catalogo" \
+"$PY" -c "import core.geometria, core.pose, core.features, core.dinamica, core.senales, core.config, core.sesion, core.reps, core.catalogo, core.db" \
   || { echo "FALLO: imports"; exit 1; }
 
 echo "== pytest =="
