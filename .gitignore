@@ -14,3 +14,6 @@ videos/
 # Artefactos de ejecución en tiempo real
 video_realtime_reps.mp4
 video_resultado_final.mp4
+
+# Resumenes de sesion generados por la app (no versionados)
+sesiones/
