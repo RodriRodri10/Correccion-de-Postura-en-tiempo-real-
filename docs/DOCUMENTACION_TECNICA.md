@@ -4,8 +4,9 @@
 
 1. [Objetivo del sistema](#1-objetivo-del-sistema)
 2. [Arquitectura general](#2-arquitectura-general)
-3. [Detección automática de ejercicio](#3-detección-automática-de-ejercicio)
-4. [Pipeline de entrenamiento](#4-pipeline-de-entrenamiento)
+3. [Interfaz Streamlit (MVP)](#3-interfaz-streamlit-mvp)
+4. [Detección automática de ejercicio](#4-detección-automática-de-ejercicio)
+5. [Pipeline de entrenamiento](#5-pipeline-de-entrenamiento)
    - 4.1 [Extracción de landmarks (MediaPipe)](#41-extracción-de-landmarks-mediapipe)
    - 4.2 [Cálculo de ángulos articulares](#42-cálculo-de-ángulos-articulares)
    - 4.3 [Detección de repeticiones](#43-detección-de-repeticiones)
@@ -76,7 +77,50 @@ flowchart TD
 
 ---
 
-## 3. Detección automática de ejercicio
+## 3. Interfaz Streamlit (MVP)
+
+**Archivo:** `app.py` (raiz del repositorio). Punto de entrada: `streamlit run app.py`.
+
+### Flujo de uso
+
+```
+app.py
+  └─ selectbox de ejercicios (core/catalogo.disponibles())
+       └─ boton "Iniciar"
+            └─ subprocess.run([sys.executable, script_del_ejercicio])
+                 └─ retroalimentacion_*.py   (ventana OpenCV en vivo)
+                      └─ core/reps.py        (FSM conteo de reps)
+                      └─ core/sesion.acumular(fase, correcto, errores)  por frame
+                      └─ core/sesion.guardar(resumen, ejercicio)  al salir (Esc)
+                           └─ sesiones/<ejercicio>_<timestamp>.json
+  └─ tarjeta de resumen
+       └─ core/sesion.cargar_ultima(ejercicio)
+```
+
+### Modulos nuevos en core/
+
+| Modulo | Funcion principal |
+|--------|-------------------|
+| `core/catalogo.py` | `EJERCICIOS` (dict con metadatos por ejercicio), `disponible(id)`, `disponibles()` |
+| `core/reps.py` | `FsmWallPushup` (WAIT_START/IN_REP/LOCKED), `FsmDominadaAbierta` (ABAJO/SUBE/ARRIBA/BAJA) |
+| `core/sesion.py` | `acumular(log, fase, correcto, errores)`, `resumen(log, reps, duracion_seg)`, `guardar(resumen, ejercicio)`, `cargar_ultima(ejercicio)` |
+
+### Metricas del resumen (core/sesion.resumen)
+
+- **reps**: contadas por la FSM del ejercicio.
+- **frames_evaluados**: frames con `correcto is not None` (fase != -1).
+- **frames_correctos**: frames con `correcto is True`.
+- **pct_correcto**: `100 * frames_correctos / frames_evaluados` (0.0 si no hay evaluados).
+- **top_errores**: los 3 mensajes de error mas frecuentes como `[[mensaje, conteo], ...]`.
+- **duracion_seg**: tiempo de pared de la sesion.
+
+### Ejercicios disponibles en el MVP
+
+Solo los dos con modelo entrenado y versionado: wall push-up y dominada agarre abierto. La dominada neutra aparece en la lista como no disponible porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`.
+
+---
+
+## 4. Detección automática de ejercicio
 
 **Archivo:** `deteccion_automatica.py`
 

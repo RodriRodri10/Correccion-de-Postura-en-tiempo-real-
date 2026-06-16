@@ -59,16 +59,16 @@ Se usa Python 3.11 porque `mediapipe==0.10.14` no es compatible de forma confiab
 
 ```bash
 source .venv/bin/activate
-python retroalimentacion_wall_pushup.py
+streamlit run app.py
 ```
 
-Tambien se puede probar:
+La app lista los ejercicios disponibles. Elige uno, pulsa **Iniciar** y la ventana de retroalimentacion en vivo (OpenCV) se abre. Realiza el ejercicio frente a la camara y cierra con `Esc`. Al terminar, la app muestra la tarjeta de resumen con reps totales, porcentaje de postura correcta y los errores mas frecuentes.
 
-```bash
-python retroalimentacion_dominada_abierta.py
-```
+Ejercicios disponibles en el MVP:
+- **Wall push-up** (vista lateral) — modelo en `modelos/wall_pushup/`.
+- **Dominada agarre abierto** (vista posterior) — modelo en `modelos/dominada_abierta/`.
 
-Los scripts en tiempo real usan `cv2.VideoCapture(0)` y se cierran con `Esc`.
+La dominada con agarre neutro aparece en la lista pero no es seleccionable porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`.
 
 ## Estado actual
 

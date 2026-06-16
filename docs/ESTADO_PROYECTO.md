@@ -1,6 +1,18 @@
 # Estado del Proyecto - Correccion de Postura en Tiempo Real
 
-**Fecha de revision:** 2026-06-14
+**Fecha de revision:** 2026-06-15
+
+## MVP con interfaz Streamlit (nuevo)
+
+El MVP con interfaz Streamlit esta disponible. Punto de entrada: `streamlit run app.py`.
+
+- `app.py` — UI web: selectbox de ejercicios disponibles, boton Iniciar, tarjeta de resumen.
+- `core/catalogo.py` — diccionario `EJERCICIOS` con metadatos y funciones `disponible`/`disponibles`.
+- `core/sesion.py` — `acumular`, `resumen`, `guardar`, `cargar_ultima` para el log por frame.
+- `core/reps.py` — `FsmWallPushup` y `FsmDominadaAbierta` (maquinas de estado para conteo de reps).
+- `sesiones/` — JSONs de sesion generados al cerrar cada ejecucion (nombre: `<ejercicio>_<timestamp>.json`).
+
+Los scripts `retroalimentacion_wall_pushup.py` y `retroalimentacion_dominada_abierta.py` estan instrumentados: registran log por frame y guardan el resumen al salir con `Esc`.
 
 ## Resumen ejecutivo
 

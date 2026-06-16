@@ -1,4 +1,4 @@
-STATUS: IN_PROGRESS
+STATUS: DONE
 
 # Progreso del MVP (Ralph marca cada ítem al cerrarlo)
 
@@ -25,5 +25,6 @@ Cuando todos esten en `[x]` y `ralph/verify.sh` pase, cambia la primera linea a
 - [x] **app.py (Streamlit)** — seleccion de ejercicio + Iniciar (subprocess) +
   tarjeta de resumen (`ralph/specs/05-streamlit-app.md`).
   > `app.py` en raiz: selectbox con ejercicios disponibles, aviso de no-disponibles, subprocess.run bloqueante, st.session_state para persistir resumen tras rerun; 19 tests en verde.
-- [ ] **Docs** — README "Ejecucion rapida" = `streamlit run app.py` y actualizar
+- [x] **Docs** — README "Ejecucion rapida" = `streamlit run app.py` y actualizar
   `docs/` (`ralph/specs/07-docs.md`).
+  > README actualizado con flujo app→OpenCV→resumen y lista de ejercicios del MVP. ESTADO_PROYECTO con nota del MVP Streamlit. DOCUMENTACION_TECNICA con nueva sección 3 (flujo, módulos core nuevos, métricas del resumen). verify.sh en verde.
