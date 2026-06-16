@@ -22,7 +22,8 @@ Cuando todos esten en `[x]` y `ralph/verify.sh` pase, cambia la primera linea a
   registran el log por frame con `core/sesion.acumular` y al salir escriben
   `sesiones/<ejercicio>_<ts>.json` (`ralph/specs/06-instrumentar-retro.md`).
   > Ambos scripts usan FsmWallPushup/FsmDominadaAbierta de core/reps; acumular por frame; guardar al salir con claves "pushup" y "dom_abierta". py_compile + 19 tests en verde.
-- [ ] **app.py (Streamlit)** — seleccion de ejercicio + Iniciar (subprocess) +
+- [x] **app.py (Streamlit)** — seleccion de ejercicio + Iniciar (subprocess) +
   tarjeta de resumen (`ralph/specs/05-streamlit-app.md`).
+  > `app.py` en raiz: selectbox con ejercicios disponibles, aviso de no-disponibles, subprocess.run bloqueante, st.session_state para persistir resumen tras rerun; 19 tests en verde.
 - [ ] **Docs** — README "Ejecucion rapida" = `streamlit run app.py` y actualizar
   `docs/` (`ralph/specs/07-docs.md`).
