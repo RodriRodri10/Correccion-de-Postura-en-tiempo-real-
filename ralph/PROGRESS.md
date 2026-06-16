@@ -1,4 +1,4 @@
-STATUS: DONE
+STATUS: DONE (Fase 1 MVP + Fase 2 persistencia)
 
 # Progreso del MVP (Ralph marca cada ítem al cerrarlo)
 
@@ -28,3 +28,16 @@ Cuando todos esten en `[x]` y `ralph/verify.sh` pase, cambia la primera linea a
 - [x] **Docs** — README "Ejecucion rapida" = `streamlit run app.py` y actualizar
   `docs/` (`ralph/specs/07-docs.md`).
   > README actualizado con flujo app→OpenCV→resumen y lista de ejercicios del MVP. ESTADO_PROYECTO con nota del MVP Streamlit. DOCUMENTACION_TECNICA con nueva sección 3 (flujo, módulos core nuevos, métricas del resumen). verify.sh en verde.
+
+## Fase 2 — Persistencia (PostgreSQL + PostgREST, contenerizado)
+
+- [x] **DB infra (Parte A)** — `db/01_init.sql` (schema `api`, tablas usuario/
+  ejercicio/sesion/sesion_error, seed, RPC `crear_sesion`, roles+grants),
+  `docker-compose.yml` (postgres + postgrest), `.env.example`, `.env` a `.gitignore`
+  (`ralph/specs/08-base-datos-postgrest.md`). Verificacion manual con docker (no en verify.sh).
+  > Stack validado end-to-end: seed del catalogo, RPC crear_sesion (sesion+errores en 1 transaccion), upsert de usuario y persistencia tras restart. Fix: puerto host de db a 5433 (evita choque con Postgres local).
+- [x] **DB cliente (Parte B)** — `core/db.py` (POST best-effort a `/rpc/crear_sesion`),
+  integrar `db.enviar_sesion(r, "<clave>")` tras `sesion.guardar` en los 2 scripts,
+  `requirements.txt` + requests, `ralph/verify.sh` + `core.db`, `tests/test_db.py`
+  (`ralph/specs/08-base-datos-postgrest.md`). Verde: `ralph/verify.sh`.
+  > core/db.py validado contra PostgREST vivo (enviar_sesion devuelve id) y no-fatalidad confirmada (DB caida -> None sin traceback). 29 tests en verde.

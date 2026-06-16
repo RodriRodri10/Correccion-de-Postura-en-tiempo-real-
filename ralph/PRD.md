@@ -64,11 +64,23 @@ con "muy"; dominada abierta: correcto = mensajes "Buena ...", error en otro caso
 - Nombres ASCII (sin acentos ni espacios) en archivos/carpetas.
 - Reutilizar `core/`; rutas vía `core/config.py`; no hardcodear `os.path.join`.
 
+## Fase 2 — Persistencia (en curso)
+
+Extension sobre el MVP: guardar el resumen de cada sesion en una base de datos
+PostgreSQL expuesta por PostgREST, todo contenerizado (Docker Compose). Permite
+historial y comparar progreso entre sesiones. Detalle en
+`ralph/specs/08-base-datos-postgrest.md`. Decisiones: **usuarios simples** (id +
+nombre, SIN autenticacion), granularidad = resumen por sesion + errores principales,
+escritura via POST a PostgREST. La DB es best-effort: NO reemplaza el JSON local ni
+puede tumbar la sesion de ejercicio si esta caida.
+
 ## Fuera de alcance (anti-deriva)
 
 - Dominada neutra; reentrenar o reemplazar modelos `.pkl`.
 - Embeber el video en el navegador (streamlit-webrtc) — es mejora Fase 2.
-- Deploy/cloud, multiusuario, autenticacion, movil.
+- Deploy/cloud, movil.
+- **Autenticacion** (login/contrasenas/JWT): los usuarios de Fase 2 son solo
+  etiquetas (id + nombre) para asociar sesiones; no hay auth.
 
 ## Criterios de aceptacion (Definition of Done)
 
