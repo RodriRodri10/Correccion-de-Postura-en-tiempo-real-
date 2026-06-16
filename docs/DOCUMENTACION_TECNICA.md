@@ -111,7 +111,9 @@ app.py
 - **frames_evaluados**: frames con `correcto is not None` (fase != -1).
 - **frames_correctos**: frames con `correcto is True`.
 - **pct_correcto**: `100 * frames_correctos / frames_evaluados` (0.0 si no hay evaluados).
-- **top_errores**: los 3 mensajes de error mas frecuentes como `[[mensaje, conteo], ...]`.
+- **top_errores**: compatibilidad con sesiones anteriores; conteo bruto por frame como `[[mensaje, conteo], ...]`.
+- **errores_principales**: los errores principales agrupados por episodios consecutivos de al menos 3 frames. Cada entrada incluye `mensaje`, `eventos`, `frames`, `segundos` aproximados y `pct_tiempo_evaluado`.
+- **frames_con_error / pct_frames_con_error**: frames evaluados con al menos un error y su porcentaje sobre `frames_evaluados`.
 - **duracion_seg**: tiempo de pared de la sesion.
 
 ### Ejercicios disponibles en el MVP

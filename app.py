@@ -78,7 +78,20 @@ if "ultima_sesion" in st.session_state:
         col1.metric("Repeticiones", datos["reps"])
         col2.metric("Postura correcta", f"{datos['pct_correcto']:.1f}%")
         col3.metric("Duracion", f"{datos['duracion_seg']:.0f} s")
-        if datos["top_errores"]:
+        if "errores_principales" in datos:
+            if datos["errores_principales"]:
+                st.write("**Errores principales:**")
+                for error in datos["errores_principales"]:
+                    eventos = error["eventos"]
+                    etiqueta_eventos = "episodio" if eventos == 1 else "episodios"
+                    st.write(
+                        f"- {error['mensaje']}: {eventos} {etiqueta_eventos}, "
+                        f"{error['segundos']:.1f} s, "
+                        f"{error['pct_tiempo_evaluado']:.1f}% del tiempo evaluado"
+                    )
+            else:
+                st.write("Sin errores registrados en esta sesion.")
+        elif datos["top_errores"]:
             st.write("**Errores mas frecuentes:**")
             for msg, conteo in datos["top_errores"]:
                 st.write(f"- {msg} ({conteo} veces)")
