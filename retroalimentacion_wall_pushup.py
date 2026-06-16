@@ -1,13 +1,15 @@
 # Retroalimentación en tiempo real para Wall Push-Up.
 import os
+import time
 import cv2
 import numpy as np
 import pandas as pd
 import joblib
 
-from core import config
+from core import config, sesion
 from core.geometria import calcular_angulo
 from core.pose import mp_pose, nueva_pose
+from core.reps import FsmWallPushup
 
 # ---------- CONFIG ----------
 _MODELOS_DIR = config.DIR_WALL_PUSHUP
@@ -113,14 +115,14 @@ def actualizar_fsm(fsm, fase):
 
         # CONDICION A: todas las fases
         if fsm["visitadas"] >= {1, 2, 3, 4} and fase == 1 and fsm["frames_rep"] >= MIN_FRAMES_REP:
-            fsm["reps"] += 1
+            fsm.reps += 1
             fsm["estado"] = ESTADO_LOCKED
             fsm["frames_fase1"] = 0
 
         # CONDICION B: vuelve a fase 1 tras movimiento (flexible)
         elif fase == 1 and fsm["frames_rep"] >= MIN_FRAMES_REP:
             if 3 in fsm["visitadas"] or 4 in fsm["visitadas"]:
-                fsm["reps"] += 1
+                fsm.reps += 1
                 fsm["estado"] = ESTADO_LOCKED
                 fsm["frames_fase1"] = 0
 
@@ -154,7 +156,9 @@ def main():
     window, hist_fases = [], []
 
     # ---- FSM REPETICIONES ----
-    fsm = init_fsm()
+    log = []
+    t0 = time.time()
+    fsm = FsmWallPushup()
 
     with nueva_pose() as pose:
         while True:
@@ -204,14 +208,22 @@ def main():
                     hist_fases.pop(0)
 
                 # ---- ACTUALIZAR FSM ----
-                fsm = actualizar_fsm(fsm, fase_pred)
+                fsm.update(fase_pred)
+
+            # ---- LOG DE SESION ----
+            if fase_pred == -1:
+                sesion.acumular(log, fase_pred, None, [])
+            else:
+                correcto = (feedback == ["Postura correcta"])
+                errores = [m for m in feedback if "muy" in m]
+                sesion.acumular(log, fase_pred, correcto, errores)
 
             # ---------- DIBUJOS ----------
             color_f = color_por_fase(fase_pred)
             cv2.putText(frame, f"Fase {fase_pred}", (w - 220, 60),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.5, color_f, 3)
 
-            dibujar_barra_y_rep(frame, fase_pred, fsm["reps"])
+            dibujar_barra_y_rep(frame, fase_pred, fsm.reps)
 
             cv2.putText(frame, f"Reps: {fsm['reps']}", (w - 220, 120),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 255, 0), 3)
@@ -250,6 +262,9 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
     print(f"Video guardado en: {RUTA_VIDEO}")
+    dur = time.time() - t0
+    r = sesion.resumen(log, fsm.reps, dur)
+    sesion.guardar(r, "pushup", os.path.join(config.RAIZ, "sesiones"))
 
 
 # ---------- EJECUTAR ----------

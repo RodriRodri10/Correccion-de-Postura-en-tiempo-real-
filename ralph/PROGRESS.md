@@ -18,9 +18,10 @@ Cuando todos esten en `[x]` y `ralph/verify.sh` pase, cambia la primera linea a
 - [x] **deteccion_automatica.py** — usar `core/catalogo` en vez del bloque
   duplicado `SCRIPTS`/`MODELOS_REQUERIDOS` (`ralph/specs/02-catalogo-ejercicios.md`).
   > Reemplazado SCRIPTS/MODELOS_REQUERIDOS por catalogo.EJERCICIOS. Refactor completo, py_compile verde.
-- [ ] **Instrumentar retroalimentacion** — wall push-up y dominada abierta
+- [x] **Instrumentar retroalimentacion** — wall push-up y dominada abierta
   registran el log por frame con `core/sesion.acumular` y al salir escriben
   `sesiones/<ejercicio>_<ts>.json` (`ralph/specs/06-instrumentar-retro.md`).
+  > Ambos scripts usan FsmWallPushup/FsmDominadaAbierta de core/reps; acumular por frame; guardar al salir con claves "pushup" y "dom_abierta". py_compile + 19 tests en verde.
 - [ ] **app.py (Streamlit)** — seleccion de ejercicio + Iniciar (subprocess) +
   tarjeta de resumen (`ralph/specs/05-streamlit-app.md`).
 - [ ] **Docs** — README "Ejecucion rapida" = `streamlit run app.py` y actualizar

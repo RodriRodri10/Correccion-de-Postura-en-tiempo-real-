@@ -1,13 +1,15 @@
 # Retroalimentación en tiempo real para dominada con agarre abierto.
 import os
+import time
 import cv2
 import numpy as np
 import joblib
 
-from core import config
+from core import config, sesion
 from core.geometria import angulo
 from core.pose import nueva_pose
 from core.features import features_frame, nuevo_historial
+from core.reps import FsmDominadaAbierta
 
 # --------------------------------------------------
 # CONFIG
@@ -57,13 +59,9 @@ def main():
     hist = nuevo_historial(25)
 
     # ---------- MAQUINA DE ESTADOS ----------
-    ABAJO, SUBE, ARRIBA, BAJA = 0, 1, 2, 3
-    estado = ABAJO
-
-    repeticiones = 0
-    cont_arriba = 0
-    cont_abajo = 0
-    FRAMES_ESTABLES = 5
+    log = []
+    t0 = time.time()
+    fsm = FsmDominadaAbierta()
 
     # ---------- POSICION TEXTO ----------
     X_IZQ = 30
@@ -104,27 +102,18 @@ def main():
                     vel_ang = hist["ang_l_vel"][-1]
 
                 # ---------- TRANSICIONES ----------
-                if estado == ABAJO and fase == 2:
-                    estado = SUBE
+                fsm.update(fase)
 
-                elif estado == SUBE and fase == 1:
-                    cont_arriba += 1
-                    if cont_arriba >= FRAMES_ESTABLES:
-                        estado = ARRIBA
-                        cont_arriba = 0
-
-                elif estado == ARRIBA and fase == 2:
-                    estado = BAJA
-
-                elif estado == BAJA and fase == 3:
-                    cont_abajo += 1
-                    if cont_abajo >= FRAMES_ESTABLES:
-                        repeticiones += 1
-                        estado = ABAJO
-                        cont_abajo = 0
+            # ---- LOG DE SESION ----
+            if fase == -1:
+                sesion.acumular(log, fase, None, [])
+            else:
+                correcto = feedback.startswith("Buena")
+                errores = [feedback] if not correcto else []
+                sesion.acumular(log, fase, correcto, errores)
 
             # ---------- DRAW ----------
-            cv2.putText(frame, f"REPETICIONES: {repeticiones}",
+            cv2.putText(frame, f"REPETICIONES: {fsm.reps}",
                         (30, 45),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 4)
 
@@ -156,6 +145,9 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
+    dur = time.time() - t0
+    r = sesion.resumen(log, fsm.reps, dur)
+    sesion.guardar(r, "dom_abierta", os.path.join(config.RAIZ, "sesiones"))
 
 
 # --------------------------------------------------
