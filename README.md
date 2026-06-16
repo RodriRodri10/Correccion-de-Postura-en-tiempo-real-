@@ -7,7 +7,6 @@ Sistema de analisis de ejercicios de fuerza mediante vision por computadora y ap
 | Ejercicio | Script en tiempo real | Fases |
 |-----------|------------------------|-------|
 | Wall push-up | `retroalimentacion_wall_pushup.py` | Inicio, descenso, abajo, subida |
-| Dominada con agarre neutro | `retroalimentacion_dominada_neutra.py` | Abajo, movimiento, arriba |
 | Dominada con agarre abierto | `retroalimentacion_dominada_abierta.py` | Arriba, transicion, abajo |
 
 ## Flujo del proyecto
@@ -68,8 +67,8 @@ Ejercicios disponibles en el MVP:
 - **Wall push-up** (vista lateral) — modelo en `modelos/wall_pushup/`.
 - **Dominada agarre abierto** (vista posterior) — modelo en `modelos/dominada_abierta/`.
 
-La dominada con agarre neutro aparece en la lista pero no es seleccionable porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`.
+La dominada con agarre neutro quedo fuera de la interfaz porque falta su modelo `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`. Sus scripts y el scaler se conservan para reentrenar a futuro.
 
 ## Estado actual
 
-El proyecto tiene modelos versionados para wall push-up y dominada con agarre abierto. La dominada con agarre neutro esta incompleta porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`.
+El proyecto tiene modelos versionados para wall push-up y dominada con agarre abierto. La dominada con agarre neutro quedo fuera de la interfaz (catalogo y deteccion automatica) porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`; sus scripts y scaler siguen versionados por si se reentrena.

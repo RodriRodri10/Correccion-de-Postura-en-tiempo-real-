@@ -15,9 +15,9 @@ Estructura esperada de cada entrada de EJERCICIOS (clave -> dict):
         "vista":   str,   # "lateral" | "frontal" | "posterior"
     }
 
-Claves del MVP: "pushup" y "dom_abierta". (Se permite incluir "dom_neutra"
-en el registro, pero disponible("dom_neutra") debe devolver False mientras
-falte su modelo.)
+Claves del MVP: "pushup" y "dom_abierta". La dominada de agarre neutro quedo
+fuera de la interfaz porque su modelo (modelo_fase_dominadas_rt.pkl) nunca se
+versiono; sus scripts y el scaler se conservan para reentrenar a futuro.
 """
 import os
 from core import config
@@ -34,12 +34,6 @@ EJERCICIOS = {
         "script": os.path.join(config.RAIZ, "retroalimentacion_dominada_abierta.py"),
         "modelo": os.path.join(config.DIR_DOM_ABIERTA, "modelo_fases.pkl"),
         "vista": "posterior",
-    },
-    "dom_neutra": {
-        "nombre": "Dominada agarre neutro",
-        "script": os.path.join(config.RAIZ, "retroalimentacion_dominada_neutra.py"),
-        "modelo": os.path.join(config.DIR_DOM_NEUTRA, "modelo_fase_dominadas_rt.pkl"),
-        "vista": "frontal",
     },
 }
 

@@ -27,11 +27,8 @@ def detectar_ejercicio(lm, w, h):
     if abs(nose[0] - centro_h[0]) > ancho_hombros * 0.35:
         return "pushup"
 
-    # frente o espalda
-    if nose[1] < centro_h[1]:
-        return "dom_neutra"     # viendo a camara
-    else:
-        return "dom_abierta"   # espalda a camara
+    # de frente o de espalda -> dominada agarre abierto (unica dominada activa)
+    return "dom_abierta"
 
 
 # -------- MAIN --------
