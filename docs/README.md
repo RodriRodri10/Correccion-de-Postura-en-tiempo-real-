@@ -7,7 +7,8 @@ Este directorio concentra la documentacion funcional y tecnica del repositorio.
 1. [README principal](../README.md) - resumen del proyecto, estructura y flujo general.
 2. [Estado del proyecto](ESTADO_PROYECTO.md) - componentes disponibles, bloqueos y proximos pasos.
 3. [Documentacion tecnica](DOCUMENTACION_TECNICA.md) - arquitectura, pipelines, features, modelos y limitaciones.
-4. [Notas para asistentes](../CLAUDE.md) - contexto operativo para cambios futuros en el codigo.
+4. [Persistencia](PERSISTENCIA.md) - base de datos opcional (PostgreSQL + PostgREST): diseno, modelo de datos y operacion.
+5. [Notas para asistentes](../CLAUDE.md) - contexto operativo para cambios futuros en el codigo.
 
 ## Mapa rapido
 
@@ -16,6 +17,7 @@ Este directorio concentra la documentacion funcional y tecnica del repositorio.
 | `../README.md` | Entrada principal para entender el repositorio. |
 | `ESTADO_PROYECTO.md` | Seguimiento del estado real del proyecto. |
 | `DOCUMENTACION_TECNICA.md` | Explicacion tecnica detallada de entrenamiento, inferencia y evaluacion. |
+| `PERSISTENCIA.md` | Diseno de la base de datos opcional (PostgreSQL + PostgREST). |
 | `../CLAUDE.md` | Reglas y notas para agentes o asistentes que modifiquen el repo. |
 
 ## Convenciones

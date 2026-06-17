@@ -135,7 +135,7 @@ docker compose down      # detiene y borra los contenedores (conserva los datos)
 docker compose down -v   # ademas borra el volumen (reinicia la base desde cero)
 ```
 
-El esquema y los modelos de datos (tablas `usuario`, `ejercicio`, `sesion`, `sesion_error`, roles y la RPC `crear_sesion`) son la fuente de verdad en `db/01_init.sql`.
+El esquema y los modelos de datos (tablas `usuario`, `ejercicio`, `sesion`, `sesion_error`, roles y la RPC `crear_sesion`) son la fuente de verdad en `db/01_init.sql`. El diseno, las decisiones y la operacion estan documentados en [docs/PERSISTENCIA.md](docs/PERSISTENCIA.md).
 
 ## Solucion de problemas
 
