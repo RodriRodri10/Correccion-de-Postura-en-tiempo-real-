@@ -4,7 +4,7 @@ Sistema de analisis de ejercicios de fuerza mediante vision por computadora y ap
 
 ![Interfaz del MVP en Streamlit](docs/img/ui.png)
 
-> Interfaz del MVP (Streamlit): se elige el ejercicio y se inicia la sesion. La retroalimentacion en vivo (esqueleto, fase, contador de reps y mensajes de tecnica) se muestra en una ventana de OpenCV aparte, no en el navegador.
+> Interfaz del MVP (Streamlit): el menu lateral permite entrenar y consultar sesiones guardadas. La retroalimentacion en vivo (esqueleto, fase, contador de reps y mensajes de tecnica) se muestra en una ventana de OpenCV aparte, no en el navegador.
 
 ## Ejercicios soportados
 
@@ -79,7 +79,12 @@ source .venv/bin/activate
 streamlit run app.py
 ```
 
-La app lista los ejercicios disponibles. Elige uno, pulsa **Iniciar** y la ventana de retroalimentacion en vivo (OpenCV) se abre. Realiza el ejercicio frente a la camara y cierra con `Esc`. Al terminar, la app muestra la tarjeta de resumen con reps totales, porcentaje de postura correcta y errores principales por episodios, duracion aproximada y porcentaje de tiempo evaluado.
+La app tiene un menu lateral basico:
+
+- **Entrenar**: lista los ejercicios disponibles. Elige uno, pulsa **Iniciar sesion** y la ventana de retroalimentacion en vivo (OpenCV) se abre. Realiza el ejercicio frente a la camara y cierra con `Esc`.
+- **Consultar sesiones**: muestra las sesiones JSON guardadas en `sesiones/`, con filtro por ejercicio, tabla de historial y detalle del resumen.
+
+Al terminar una sesion, la app cambia automaticamente a **Consultar sesiones** para mostrar la sesion recien guardada. El resumen incluye reps totales, porcentaje de postura correcta, errores principales por episodios, duracion aproximada y porcentaje de tiempo evaluado.
 
 Ejercicios disponibles en el MVP:
 - **Wall push-up** (vista lateral) — modelo en `modelos/wall_pushup/`.
@@ -89,7 +94,7 @@ La dominada con agarre neutro quedo fuera de la interfaz porque falta su modelo 
 
 ## Persistencia opcional (PostgreSQL + PostgREST en Docker)
 
-Cada sesion se guarda siempre como JSON en `sesiones/`. Ademas, de forma **opcional**, el resumen puede enviarse a una base de datos PostgreSQL expuesta por PostgREST, todo contenerizado. Es *best-effort*: si la base no esta levantada, la sesion de ejercicio funciona igual (el envio se omite sin error).
+Cada sesion se guarda siempre como JSON en `sesiones/`; esa es la fuente que usa el menu **Consultar sesiones**. Ademas, de forma **opcional**, el resumen puede enviarse a una base de datos PostgreSQL expuesta por PostgREST, todo contenerizado. Es *best-effort*: si la base no esta levantada, la sesion de ejercicio funciona igual (el envio se omite sin error).
 
 ### Requisitos
 
@@ -148,7 +153,7 @@ El esquema y los modelos de datos (tablas `usuario`, `ejercicio`, `sesion`, `ses
 | `streamlit run app.py`: "Port 8501 is not available" | Ya hay otra app en 8501 | Usa otro puerto: `streamlit run app.py --server.port 8502`. |
 | `[db] no se pudo enviar la sesion a PostgREST` | La base de datos no esta levantada | Es **best-effort**: la sesion funciona igual y el JSON local se guarda. Para persistir: `docker compose up -d db postgrest`. |
 | `docker compose up` falla por el puerto 5433 o 3000 | Otro servicio usa esos puertos | Cambia el puerto host de la DB con `DB_PORT=5434 docker compose up -d db postgrest`; el 3000 (PostgREST) se ajusta en `docker-compose.yml`. |
-| No se genera `sesiones/<...>.json` | Cerraste antes de completar una repeticion | El resumen se escribe al salir con `Esc` tras al menos una rep contada por el FSM. |
+| No aparece una sesion nueva en el menu | La camara no abrio, el script termino antes del guardado o no se cerro con `Esc` | Revisa la consola de Streamlit/OpenCV, verifica permisos de camara y repite cerrando la ventana de video con `Esc`. |
 
 ## Estado actual
 

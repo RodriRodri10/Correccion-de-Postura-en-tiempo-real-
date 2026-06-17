@@ -1,4 +1,7 @@
 """Contrato del acumulador/resumen de sesion (TDD: rojo -> verde)."""
+import json
+import os
+
 from core import sesion
 
 
@@ -116,3 +119,36 @@ def test_guardar_y_cargar_ultima(tmp_path):
 
 def test_cargar_ultima_vacio(tmp_path):
     assert sesion.cargar_ultima(str(tmp_path)) is None
+
+
+def test_listar_sesiones_ordenadas_y_con_metadata(tmp_path):
+    antigua = tmp_path / "pushup_20260615_010203.json"
+    reciente = tmp_path / "dom_abierta_20260616_040506.json"
+    antigua.write_text(json.dumps({"reps": 1, "pct_correcto": 50.0}), encoding="utf-8")
+    reciente.write_text(json.dumps({"reps": 2, "pct_correcto": 75.0}), encoding="utf-8")
+    os.utime(antigua, (1, 1))
+    os.utime(reciente, (2, 2))
+
+    registros = sesion.listar(str(tmp_path))
+
+    assert [r["archivo"] for r in registros] == [
+        "dom_abierta_20260616_040506.json",
+        "pushup_20260615_010203.json",
+    ]
+    assert registros[0]["ejercicio"] == "dom_abierta"
+    assert registros[0]["timestamp"] == "20260616_040506"
+    assert registros[0]["datos"]["reps"] == 2
+
+
+def test_listar_sesiones_filtra_por_ejercicio(tmp_path):
+    (tmp_path / "pushup_20260615_010203.json").write_text(
+        json.dumps({"reps": 1}), encoding="utf-8"
+    )
+    (tmp_path / "dom_abierta_20260616_040506.json").write_text(
+        json.dumps({"reps": 2}), encoding="utf-8"
+    )
+
+    registros = sesion.listar(str(tmp_path), ejercicio="pushup")
+
+    assert len(registros) == 1
+    assert registros[0]["archivo"] == "pushup_20260615_010203.json"

@@ -156,3 +156,58 @@ def cargar_ultima(dir_sesiones, ejercicio=None):
     _, fpath = archivos[0]
     with open(fpath, encoding="utf-8") as f:
         return json.load(f)
+
+
+def listar(dir_sesiones, ejercicio=None, limite=None):
+    """Lista resumenes JSON guardados, ordenados del mas reciente al mas antiguo.
+
+    Devuelve una lista de dicts:
+        {
+            "archivo": str,
+            "ruta": str,
+            "ejercicio": str,
+            "timestamp": str,
+            "mtime": float,
+            "datos": dict,
+        }
+    """
+    if not os.path.isdir(dir_sesiones):
+        return []
+
+    registros = []
+    for fname in os.listdir(dir_sesiones):
+        if not fname.endswith(".json"):
+            continue
+
+        clave, timestamp = _partes_nombre_sesion(fname)
+        if ejercicio and clave != ejercicio:
+            continue
+
+        fpath = os.path.join(dir_sesiones, fname)
+        try:
+            with open(fpath, encoding="utf-8") as f:
+                datos = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+
+        registros.append({
+            "archivo": fname,
+            "ruta": fpath,
+            "ejercicio": clave,
+            "timestamp": timestamp,
+            "mtime": os.path.getmtime(fpath),
+            "datos": datos,
+        })
+
+    registros.sort(key=lambda r: r["mtime"], reverse=True)
+    if limite is not None:
+        return registros[:limite]
+    return registros
+
+
+def _partes_nombre_sesion(fname):
+    base = fname[:-5] if fname.endswith(".json") else fname
+    partes = base.split("_")
+    if len(partes) >= 3:
+        return "_".join(partes[:-2]), f"{partes[-2]}_{partes[-1]}"
+    return base, ""

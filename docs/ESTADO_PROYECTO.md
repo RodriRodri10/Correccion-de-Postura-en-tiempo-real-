@@ -9,13 +9,13 @@ neutro y dominada con agarre abierto) sobre un paquete `core/` que centraliza la
 comun (geometria, MediaPipe, senales, features). Sobre esa base se construyo un **MVP con
 interfaz Streamlit** (Fase 1) y una capa de **persistencia contenerizada con PostgreSQL +
 PostgREST** (Fase 2). Ambas fases estan cerradas y `verify.sh` pasa en verde
-(py_compile + smoke de imports + 29 tests).
+(py_compile + smoke de imports + 31 tests).
 
 Estado mas importante:
 
-- **MVP Streamlit operativo**: punto de entrada `streamlit run app.py`. Selecciona el
-  ejercicio disponible, lanza la retroalimentacion por webcam (subprocess) y muestra una
-  tarjeta de resumen al cerrar la sesion.
+- **MVP Streamlit operativo**: punto de entrada `streamlit run app.py`. Incluye menu
+  lateral para entrenar y consultar sesiones; lanza la retroalimentacion por webcam
+  (subprocess) y muestra el historial local al cerrar la sesion.
 - **Persistencia opcional y no fatal**: cada sesion se guarda como JSON local
   (`sesiones/`) y, ademas, se intenta enviar a PostgREST. Si la base no esta levantada,
   el envio retorna `None` sin romper la ejecucion.
@@ -30,13 +30,14 @@ Estado mas importante:
 
 Punto de entrada: `streamlit run app.py`.
 
-- `app.py` — UI web: selectbox de ejercicios disponibles, aviso de no-disponibles, boton
-  Iniciar (lanza el script de retroalimentacion por `subprocess.run` bloqueante) y tarjeta
-  de resumen persistida en `st.session_state` tras el rerun.
+- `app.py` — UI web con menu lateral: **Entrenar** (selectbox de ejercicios disponibles,
+  aviso de no-disponibles y boton Iniciar) y **Consultar sesiones** (tabla de historial
+  local, filtro por ejercicio y detalle del resumen). Al cerrar una sesion cambia a la
+  consulta para mostrar el JSON recien guardado.
 - `core/catalogo.py` — diccionario `EJERCICIOS` con metadatos y funciones
   `disponible`/`disponibles` (chequean existencia del modelo requerido).
-- `core/sesion.py` — `acumular`, `resumen`, `guardar`, `cargar_ultima` para el log por
-  frame y el resumen de la sesion.
+- `core/sesion.py` — `acumular`, `resumen`, `guardar`, `cargar_ultima` y `listar` para el
+  log por frame, el resumen de la sesion y la consulta de historiales JSON.
 - `core/reps.py` — `FsmWallPushup` y `FsmDominadaAbierta`: maquinas de estado para el
   conteo de repeticiones, extraidas de los scripts de retroalimentacion.
 - `sesiones/` — JSONs de sesion generados al cerrar cada ejecucion
@@ -72,7 +73,7 @@ cubre `import core.db` y `tests/test_db.py` (sin red).
 
 | Componente | Archivo | Estado |
 |------------|---------|--------|
-| Interfaz MVP | `app.py` (Streamlit) | Operativa; seleccion + Iniciar + resumen. |
+| Interfaz MVP | `app.py` (Streamlit) | Operativa; menu Entrenar + Consultar sesiones. |
 | Deteccion automatica (CLI) | `deteccion_automatica.py` | Usa `core/catalogo`; valida script y modelo antes de lanzar. |
 | Arranque rapido | `init.sh` / `init.bat` | Scripts de inicializacion del entorno. |
 
@@ -95,7 +96,7 @@ cubre `import core.db` y `tests/test_db.py` (sin red).
 | `features.py` | `features_frame` (41 features), `nuevo_historial` | dominada abierta |
 | `config.py` | rutas de `modelos/` y `videos/` | todos |
 | `catalogo.py` | `EJERCICIOS`, `disponible`, `disponibles` | `app.py`, deteccion |
-| `sesion.py` | `acumular`, `resumen`, `guardar`, `cargar_ultima` | retroalimentacion, app |
+| `sesion.py` | `acumular`, `resumen`, `guardar`, `cargar_ultima`, `listar` | retroalimentacion, app |
 | `reps.py` | `FsmWallPushup`, `FsmDominadaAbierta` | retroalimentacion |
 | `db.py` | `enviar_sesion` (cliente PostgREST, no fatal) | retroalimentacion |
 
@@ -126,6 +127,8 @@ entrenamiento por ejercicio, pero `videos/` no existe en el repositorio (esta en
 ## Problemas resueltos
 
 - **Fase 1 (MVP Streamlit) y Fase 2 (persistencia PostgreSQL + PostgREST):** cerradas.
+- **Consulta basica de sesiones:** la app lista los JSON locales de `sesiones/`, filtra por
+  ejercicio y muestra el detalle del resumen despues de cerrar el video.
 - **P1 - `import os` faltante:** corregido en `deteccion_automatica.py`.
 - **P3 - Orden de features en dominada neutra:** inferencia y evaluacion usan el mismo
   orden que el entrenamiento (`ang, vel, acc, ang_mean, ang_min, ang_max, vel_mean`).
@@ -142,7 +145,7 @@ entrenamiento por ejercicio, pero `videos/` no existe en el repositorio (esta en
 ## Validacion reciente
 
 - `verify.sh` pasa en verde: `py_compile core/*.py *.py`, smoke de imports (incluye
-  `core.sesion`, `core.reps`, `core.catalogo`, `core.db`) y **29 tests** con pytest.
+  `core.sesion`, `core.reps`, `core.catalogo`, `core.db`) y **31 tests** con pytest.
 - Stack de Docker (db + postgrest) validado manualmente end-to-end.
 - La camara local abre con `cv2.VideoCapture(0)`.
 
@@ -152,5 +155,7 @@ entrenamiento por ejercicio, pero `videos/` no existe en el repositorio (esta en
    neutra al MVP.
 2. Reentrenar el modelo de wall push-up para incorporar la feature de espalda corregida.
 3. Documentar o agregar una estrategia para obtener los videos de entrenamiento y prueba.
-4. (Opcional) Agregar tests sobre `core/geometria.py` y `core/features.py` adicionales y
+4. (Opcional) Conectar el menu de historial a PostgREST cuando la DB este activa y agregar
+   graficas de progreso por ejercicio.
+5. (Opcional) Agregar tests sobre `core/geometria.py` y `core/features.py` adicionales y
    automatizar la verificacion del stack de Docker.

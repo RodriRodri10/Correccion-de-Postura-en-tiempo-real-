@@ -85,16 +85,20 @@ flowchart TD
 
 ```
 app.py
-  └─ selectbox de ejercicios (core/catalogo.disponibles())
-       └─ boton "Iniciar"
-            └─ subprocess.run([sys.executable, script_del_ejercicio])
-                 └─ retroalimentacion_*.py   (ventana OpenCV en vivo)
-                      └─ core/reps.py        (FSM conteo de reps)
-                      └─ core/sesion.acumular(fase, correcto, errores)  por frame
-                      └─ core/sesion.guardar(resumen, ejercicio)  al salir (Esc)
-                           └─ sesiones/<ejercicio>_<timestamp>.json
-  └─ tarjeta de resumen
-       └─ core/sesion.cargar_ultima(ejercicio)
+  └─ menu lateral
+       ├─ Entrenar
+       │    └─ selectbox de ejercicios (core/catalogo.disponibles())
+       │         └─ boton "Iniciar sesion"
+       │              └─ subprocess.run([sys.executable, script_del_ejercicio])
+       │                   └─ retroalimentacion_*.py   (ventana OpenCV en vivo)
+       │                        └─ core/reps.py        (FSM conteo de reps)
+       │                        └─ core/sesion.acumular(fase, correcto, errores)  por frame
+       │                        └─ core/sesion.guardar(resumen, ejercicio)  al salir (Esc)
+       │                             └─ sesiones/<ejercicio>_<timestamp>.json
+       │              └─ cambia a "Consultar sesiones" tras el rerun
+       └─ Consultar sesiones
+            └─ core/sesion.listar()
+                 └─ tabla de historial + filtro por ejercicio + detalle del resumen
 ```
 
 ### Modulos nuevos en core/
@@ -103,7 +107,19 @@ app.py
 |--------|-------------------|
 | `core/catalogo.py` | `EJERCICIOS` (dict con metadatos por ejercicio), `disponible(id)`, `disponibles()` |
 | `core/reps.py` | `FsmWallPushup` (WAIT_START/IN_REP/LOCKED), `FsmDominadaAbierta` (ABAJO/SUBE/ARRIBA/BAJA) |
-| `core/sesion.py` | `acumular(log, fase, correcto, errores)`, `resumen(log, reps, duracion_seg)`, `guardar(resumen, ejercicio)`, `cargar_ultima(ejercicio)` |
+| `core/sesion.py` | `acumular(log, fase, correcto, errores)`, `resumen(log, reps, duracion_seg)`, `guardar(resumen, ejercicio)`, `cargar_ultima(ejercicio)`, `listar(dir_sesiones, ejercicio=None, limite=None)` |
+
+### Consulta de sesiones
+
+La vista **Consultar sesiones** no depende de PostgREST. Lee los JSON locales de
+`sesiones/`, los ordena del mas reciente al mas antiguo y deriva la clave del ejercicio y
+el timestamp desde el nombre `<ejercicio>_<YYYYMMDD>_<HHMMSS>.json`. Esto permite consultar
+el historial aunque la base de datos opcional este apagada.
+
+La tabla muestra fecha, ejercicio, repeticiones, porcentaje de postura correcta, duracion y
+archivo. El detalle reutiliza el mismo render del resumen inmediato: metricas principales y
+errores principales por episodios, con compatibilidad para sesiones antiguas que solo tengan
+`top_errores`.
 
 ### Metricas del resumen (core/sesion.resumen)
 
@@ -118,7 +134,7 @@ app.py
 
 ### Ejercicios disponibles en el MVP
 
-Solo los dos con modelo entrenado y versionado: wall push-up y dominada agarre abierto. La dominada neutra aparece en la lista como no disponible porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`.
+Solo los dos con modelo entrenado y versionado: wall push-up y dominada agarre abierto. La dominada neutra queda fuera del catalogo visible del MVP porque falta `modelos/dominada_neutra/modelo_fase_dominadas_rt.pkl`.
 
 ---
 

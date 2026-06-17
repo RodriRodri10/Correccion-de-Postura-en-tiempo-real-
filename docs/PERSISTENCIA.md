@@ -11,6 +11,10 @@ el progreso entre sesiones. Todo corre contenerizado con Docker Compose.
 La fuente de verdad del esquema es [`db/01_init.sql`](../db/01_init.sql). Este documento
 explica el porque de las decisiones y como encajan las piezas.
 
+La interfaz Streamlit ya incluye una vista basica de historial (**Consultar sesiones**) que
+lee directamente los JSON locales de `sesiones/`. Esta vista no requiere Docker. PostgREST
+sigue siendo la capa opcional para persistencia relacional y consulta HTTP.
+
 ## Decisiones de diseno
 
 | Decision | Eleccion | Por que |
@@ -176,5 +180,5 @@ re-aplicar cambios al esquema durante el desarrollo hay que recrear el volumen
 - Sin autenticacion ni multiusuario real (ver arriba).
 - Granularidad de resumen: no hay series temporales por frame ni por repeticion.
 - No hay migraciones; el esquema vive en un unico `01_init.sql` que corre en una DB vacia.
-- Posible siguiente paso: una vista de historial en la app que lea de PostgREST y grafique
-  el progreso por ejercicio a lo largo del tiempo.
+- El historial de la app lee JSON locales; un siguiente paso es conectarlo a PostgREST
+  cuando la DB este activa y graficar el progreso por ejercicio a lo largo del tiempo.
