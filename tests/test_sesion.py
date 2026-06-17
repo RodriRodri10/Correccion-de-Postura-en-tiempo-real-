@@ -1,4 +1,4 @@
-"""Contrato del acumulador/resumen de sesion (objetivo de Ralph: rojo -> verde)."""
+"""Contrato del acumulador/resumen de sesion (TDD: rojo -> verde)."""
 from core import sesion
 
 

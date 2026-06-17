@@ -4,8 +4,8 @@ Centraliza el registro que hoy esta duplicado en ``deteccion_automatica.py``
 (diccionarios SCRIPTS y MODELOS_REQUERIDOS) para que tanto el detector
 automatico como la app de Streamlit consulten una sola fuente de verdad.
 
-Lo implementa Ralph para pasar tests/test_catalogo.py reutilizando las rutas de
-``core/config.py``. NO duplicar os.path.join dispersos: derivar de config.
+Cubierto por tests/test_catalogo.py; reutiliza las rutas de ``core/config.py``.
+NO duplicar os.path.join dispersos: derivar de config.
 
 Estructura esperada de cada entrada de EJERCICIOS (clave -> dict):
     {

@@ -17,6 +17,14 @@ command -v "$PY" >/dev/null 2>&1 || {
   exit 1
 }
 
+# 1b) Advertir si no es Python 3.11 (mediapipe==0.10.14 no es confiable en 3.12/3.13).
+VER="$("$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null)"
+if [ "$VER" != "3.11" ]; then
+  echo "ADVERTENCIA: usando Python ${VER:-desconocido} (se recomienda 3.11)." >&2
+  echo "  mediapipe==0.10.14 puede fallar al instalar fuera de Python 3.11." >&2
+  echo "  Si la instalacion falla, exporta PYTHON=/ruta/a/python3.11 y reintenta." >&2
+fi
+
 # 2) Entorno virtual.
 echo "== Entorno virtual (.venv) con $PY =="
 [ -d .venv ] || "$PY" -m venv .venv

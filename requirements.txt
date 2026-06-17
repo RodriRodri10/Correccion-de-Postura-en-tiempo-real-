@@ -7,5 +7,5 @@ pykalman
 scikit-learn==1.6.1  # coincide con los modelos .pkl versionados
 joblib
 streamlit            # interfaz del MVP (app.py)
-pytest               # verificacion headless (tests/, ralph/verify.sh)
+pytest               # verificacion headless (tests/, verify.sh)
 requests             # cliente HTTP a PostgREST (core/db.py); persistencia opcional

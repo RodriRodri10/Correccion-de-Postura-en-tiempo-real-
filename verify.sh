@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Arnes de verificacion headless del MVP. Sin camara ni GUI.
-# Lo usa el loop de Ralph como gate (commit solo en verde) y se puede correr a mano:
-#   bash ralph/verify.sh
+# Corre a mano o desde el Makefile:
+#   bash verify.sh      (equivalente: make verify)
 set -uo pipefail
 
-cd "$(dirname "$0")/.." || exit 1
+cd "$(dirname "$0")" || exit 1
 
 PY=".venv/bin/python"
 [ -x "$PY" ] || PY="python3"

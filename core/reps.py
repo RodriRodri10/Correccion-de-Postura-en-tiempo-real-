@@ -7,9 +7,8 @@ push-up como funciones ``init_fsm``/``actualizar_fsm`` en
 puras y testeables que reciben la fase por frame y exponen ``.reps``, sin
 depender de OpenCV ni de la camara.
 
-Lo implementa Ralph para pasar tests/test_reps.py preservando EXACTAMENTE el
-comportamiento de conteo actual. NO cambiar las firmas ni los umbrales sin
-actualizar tests/specs.
+Cubierto por tests/test_reps.py; preserva EXACTAMENTE el comportamiento de conteo
+actual. NO cambiar las firmas ni los umbrales sin actualizar los tests.
 """
 
 

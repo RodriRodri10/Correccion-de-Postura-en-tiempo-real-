@@ -12,7 +12,7 @@ script de cada ejercicio decide ``correcto``/``errores`` con su propia logica de
 feedback (p.ej. wall push-up: correcto = feedback == ["Postura correcta"];
 errores = [m for m in feedback if "muy" in m]).
 
-Lo implementa Ralph para pasar tests/test_sesion.py. NO modificar las firmas.
+Implementa el contrato cubierto por tests/test_sesion.py. NO modificar las firmas.
 """
 import json
 import os

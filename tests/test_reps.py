@@ -1,4 +1,4 @@
-"""Contrato de conteo de repeticiones (objetivo de Ralph: rojo -> verde).
+"""Contrato de conteo de repeticiones (TDD: rojo -> verde).
 
 Alimenta secuencias de fases sinteticas que simulan N repeticiones y exige que
 las FSM extraidas a core/reps.py cuenten exactamente N, preservando la logica

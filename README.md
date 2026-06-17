@@ -2,6 +2,10 @@
 
 Sistema de analisis de ejercicios de fuerza mediante vision por computadora y aprendizaje automatico. Usa MediaPipe Pose para extraer landmarks corporales y modelos Random Forest para clasificar fases de movimiento en tiempo real.
 
+![Interfaz del MVP en Streamlit](docs/img/ui.png)
+
+> Interfaz del MVP (Streamlit): se elige el ejercicio y se inicia la sesion. La retroalimentacion en vivo (esqueleto, fase, contador de reps y mensajes de tecnica) se muestra en una ventana de OpenCV aparte, no en el navegador.
+
 ## Ejercicios soportados
 
 | Ejercicio | Script en tiempo real | Fases |
@@ -131,7 +135,20 @@ docker compose down      # detiene y borra los contenedores (conserva los datos)
 docker compose down -v   # ademas borra el volumen (reinicia la base desde cero)
 ```
 
-El esquema (`db/01_init.sql`) y los modelos de datos estan descritos en `ralph/specs/08-base-datos-postgrest.md`.
+El esquema y los modelos de datos (tablas `usuario`, `ejercicio`, `sesion`, `sesion_error`, roles y la RPC `crear_sesion`) son la fuente de verdad en `db/01_init.sql`.
+
+## Solucion de problemas
+
+| Sintoma | Causa probable | Que hacer |
+|---------|----------------|-----------|
+| `pip install` falla en `mediapipe` | El interprete no es Python 3.11 | `mediapipe==0.10.14` no tiene wheel confiable para 3.12/3.13. Crea el venv con 3.11: `PYTHON=/usr/bin/python3.11 ./init.sh`. |
+| La camara no abre o se ve en negro | Otra app la tiene ocupada, o el indice no es 0 | Cierra Zoom/Meet/navegador que use la webcam. Si tienes varias camaras, prueba con otro indice (`cv2.VideoCapture(1)`) o revisa permisos del sistema. |
+| Pulso "Iniciar" y no veo video en el navegador | Es lo esperado | El video en vivo se abre en una **ventana de OpenCV separada** (no en Streamlit). Traela al frente; cierra con `Esc`. |
+| Un ejercicio aparece como "no disponible" | Falta su `.pkl` en `modelos/` | Solo wall push-up y dominada abierta tienen modelo. La dominada neutra requiere reentrenar (`modelo_fase_dominadas_rt.pkl`). |
+| `streamlit run app.py`: "Port 8501 is not available" | Ya hay otra app en 8501 | Usa otro puerto: `streamlit run app.py --server.port 8502`. |
+| `[db] no se pudo enviar la sesion a PostgREST` | La base de datos no esta levantada | Es **best-effort**: la sesion funciona igual y el JSON local se guarda. Para persistir: `docker compose up -d db postgrest`. |
+| `docker compose up` falla por el puerto 5433 o 3000 | Otro servicio usa esos puertos | Cambia el puerto host de la DB con `DB_PORT=5434 docker compose up -d db postgrest`; el 3000 (PostgREST) se ajusta en `docker-compose.yml`. |
+| No se genera `sesiones/<...>.json` | Cerraste antes de completar una repeticion | El resumen se escribe al salir con `Esc` tras al menos una rep contada por el FSM. |
 
 ## Estado actual
 

@@ -15,6 +15,13 @@ set "PY=py -3.11"
   exit /b 1
 )
 
+REM 1b) Advertir si no es Python 3.11 (mediapipe==0.10.14 no es confiable en 3.12/3.13).
+for /f "tokens=2 delims= " %%v in ('%PY% --version 2^>^&1') do set "PYVER=%%v"
+echo %PYVER% | findstr /b "3.11" >nul || (
+  echo ADVERTENCIA: usando Python %PYVER% ^(se recomienda 3.11^).
+  echo   mediapipe==0.10.14 puede fallar al instalar fuera de Python 3.11.
+)
+
 REM 2) Entorno virtual.
 echo == Entorno virtual (.venv) ==
 if not exist .venv ( %PY% -m venv .venv )

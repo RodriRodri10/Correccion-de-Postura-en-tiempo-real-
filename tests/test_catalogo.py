@@ -1,4 +1,4 @@
-"""Contrato del catalogo de ejercicios (objetivo de Ralph: rojo -> verde).
+"""Contrato del catalogo de ejercicios (TDD: rojo -> verde).
 
 ``disponible`` depende de archivos versionados en el repo: los modelos de
 pushup y dom_abierta existen; el de dom_neutra no (pendiente P2).
