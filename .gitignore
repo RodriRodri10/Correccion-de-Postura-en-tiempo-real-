@@ -21,3 +21,6 @@ sesiones/
 
 # Configuracion de entorno (DB, passwords, etc.)
 .env
+
+# Herramientas locales de asistentes
+.claude/
